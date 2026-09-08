@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'role_model.dart';
+import 'resident_brief_model.dart';
 
 class UserModel {
   const UserModel({
     required this.id,
     required this.phone,
-    required this.email,
+    this.email,
     required this.isActive,
     required this.roles,
     this.resident,
@@ -15,9 +17,20 @@ class UserModel {
   final String? email;
   final bool isActive;
   final List<RoleModel> roles;
-  final ResidentMiniModel? resident;
+  final ResidentBriefModel? resident;
 
-  bool hasRole(String code) => roles.any((r) => r.code == code);
+  /// Returns the role with highest privilege:
+  /// rt > bendahara > warga
+  String? get primaryRoleCode {
+    for (final code in ['rt', 'bendahara', 'warga']) {
+      if (roles.any((r) => r.code == code)) return code;
+    }
+    return null;
+  }
+
+  bool get hasRoleRt => roles.any((r) => r.code == 'rt');
+  bool get hasRoleBendahara => roles.any((r) => r.code == 'bendahara');
+  bool get hasRoleWarga => roles.any((r) => r.code == 'warga');
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -30,76 +43,32 @@ class UserModel {
               ?.map((e) => RoleModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      resident: json['resident'] == null
-          ? null
-          : ResidentMiniModel.fromJson(
+      resident: json['resident'] != null
+          ? ResidentBriefModel.fromJson(
               json['resident'] as Map<String, dynamic>,
-            ),
+            )
+          : null,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'phone': phone,
-    'email': email,
-    'is_active': isActive,
-    'roles': roles.map((r) => r.toJson()).toList(),
-    'resident': resident?.toJson(),
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'phone': phone,
+      'email': email,
+      'is_active': isActive,
+      'roles': roles
+          .map((r) => {'id': r.id, 'name': r.name, 'code': r.code})
+          .toList(),
+      'resident': resident != null
+          ? {'id': resident!.id, 'full_name': resident!.fullName}
+          : null,
+    };
+  }
 
   String toJsonString() => jsonEncode(toJson());
-}
 
-class RoleModel {
-  const RoleModel({required this.id, required this.name, required this.code});
-
-  final int id;
-  final String name;
-  final String code;
-
-  factory RoleModel.fromJson(Map<String, dynamic> json) {
-    return RoleModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      code: json['code'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'code': code};
-}
-
-class ResidentMiniModel {
-  const ResidentMiniModel({required this.id, required this.fullName});
-
-  final int id;
-  final String fullName;
-
-  factory ResidentMiniModel.fromJson(Map<String, dynamic> json) {
-    return ResidentMiniModel(
-      id: json['id'] as int,
-      fullName: json['full_name'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {'id': id, 'full_name': fullName};
-}
-
-class LoginResponse {
-  const LoginResponse({
-    required this.token,
-    required this.tokenType,
-    required this.user,
-  });
-
-  final String token;
-  final String tokenType;
-  final UserModel user;
-
-  factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    return LoginResponse(
-      token: json['token'] as String,
-      tokenType: json['token_type'] as String,
-      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
-    );
+  factory UserModel.fromJsonString(String jsonString) {
+    return UserModel.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
   }
 }
