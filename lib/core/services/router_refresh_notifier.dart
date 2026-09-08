@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../features/auth/providers/auth_provider.dart';
+import 'auth_state.dart';
 
 final routerRefreshNotifier = _RouterRefreshNotifier();
 
