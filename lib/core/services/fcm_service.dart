@@ -105,3 +105,14 @@ class FCMService {
     }
   }
 }
+
+// Top-level functions for app initialization
+void initFcmListeners() {
+  FCMService.instance.setMessageHandler((message) {
+    _fcmMessageController.add(message);
+  });
+}
+
+final _fcmMessageController = StreamController<RemoteMessage>.broadcast();
+
+Stream<RemoteMessage> get fcmMessageStream => _fcmMessageController.stream;
