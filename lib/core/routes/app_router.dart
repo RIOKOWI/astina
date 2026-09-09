@@ -15,6 +15,8 @@ import '../../features/residents/presentation/pages/residents_page.dart';
 import '../../features/residents/presentation/pages/resident_detail_page.dart';
 import '../../features/residents/presentation/pages/households_page.dart';
 import '../../features/residents/presentation/pages/household_detail_page.dart';
+import '../../features/residents/presentation/pages/users_page.dart';
+import '../../features/residents/presentation/pages/user_detail_page.dart';
 
 final _restrictedRoutes = {
   '/residents': [UserRole.rt],
@@ -147,6 +149,17 @@ final appRouter = GoRouter(
       builder: (context, state) => HouseholdDetailPage(
         householdId: int.parse(state.pathParameters['id']!),
       ),
+    ),
+    GoRoute(
+      path: '/users',
+      name: 'users',
+      builder: (context, state) => const UsersPage(),
+    ),
+    GoRoute(
+      path: '/users/:id',
+      name: 'user-detail',
+      builder: (context, state) =>
+          UserDetailPage(userId: int.parse(state.pathParameters['id']!)),
     ),
   ],
   errorBuilder: (context, state) =>
