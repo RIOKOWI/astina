@@ -20,6 +20,11 @@ class ApiConstants {
 
   // Activities
   static const String activities = '/activities';
+  static String activityDetail(int id) => '/activities/$id';
+  static String activityRead(int id) => '/activities/$id/read';
+  static String activityAttachments(int id) => '/activities/$id/attachments';
+  static String activityAttachment(int activityId, int attachmentId) =>
+      '/activities/$activityId/attachments/$attachmentId';
 
   // Notifications
   static const String notifications = '/notifications';
