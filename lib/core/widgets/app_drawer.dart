@@ -131,7 +131,11 @@ class AppDrawer extends ConsumerWidget {
                 color: AppColors.error,
                 onTap: () {
                   Navigator.pop(context);
-                  _showLogoutDialog(context, ref);
+                  _showLogoutDialog(
+                    pageContext: context,
+                    ref: ref,
+                    onLoggedOut: () => GoRouter.of(context).go('/login'),
+                  );
                 },
               ),
             ),
@@ -158,9 +162,13 @@ class AppDrawer extends ConsumerWidget {
     }
   }
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+  void _showLogoutDialog({
+    required BuildContext pageContext,
+    required WidgetRef ref,
+    required VoidCallback onLoggedOut,
+  }) {
     showDialog(
-      context: context,
+      context: pageContext,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Konfirmasi Keluar'),
@@ -174,6 +182,7 @@ class AppDrawer extends ConsumerWidget {
             onPressed: () async {
               Navigator.of(ctx).pop();
               await ref.read(authProvider.notifier).logout();
+              onLoggedOut();
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Keluar'),
