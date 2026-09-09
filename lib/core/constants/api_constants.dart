@@ -37,6 +37,12 @@ class ApiConstants {
 
   // Complaints
   static const String complaints = '/complaints';
+  static String complaintDetail(int id) => '/complaints/$id';
+  static String complaintStatus(int id) => '/complaints/$id/status';
+  static String complaintAttachments(int id) => '/complaints/$id/attachments';
+  static String complaintAttachment(int complaintId, int attachmentId) =>
+      '/complaints/$complaintId/attachments/$attachmentId';
+  static String complaintComments(int id) => '/complaints/$id/comments';
 
   // Finance
   static const String financeSummary = '/finance/summary';
