@@ -5,6 +5,7 @@ import '../../../core/injection/dependency_injection.dart';
 import '../../../core/services/auth_state.dart';
 import '../../../core/services/router_refresh_notifier.dart';
 import '../../../core/services/secure_storage.dart';
+import '../../fcm/fcm_provider.dart';
 import '../data/datasources/auth_remote_data_source.dart';
 import '../data/models/user_model.dart';
 
@@ -29,6 +30,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final user = await _ds.getMe();
       await _storage.saveUser(user.toJsonString());
       _updateState(user);
+      registerFcmToken();
     } catch (e, st) {
       if (kDebugMode) {
         developer.log(
@@ -58,11 +60,13 @@ class AuthNotifier extends Notifier<AuthState> {
     await _storage.saveToken(token);
     await _storage.saveUser(user.toJsonString());
     _updateState(user);
+    registerFcmToken();
     if (kDebugMode) developer.log('Auth: login success', name: 'Auth');
   }
 
   Future<void> logout() async {
     if (kDebugMode) developer.log('Auth: logout started', name: 'Auth');
+    await revokeFcmToken();
     try {
       await _ds.logout();
     } catch (e, st) {
