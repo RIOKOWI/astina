@@ -48,6 +48,10 @@ class AuthNotifier extends Notifier<AuthState> {
     routerRefreshNotifier.update(state);
   }
 
+  /// Exposed as protected for test subclassing. Use [_updateState] in production.
+  @visibleForTesting
+  void updateAuthState(UserModel? user) => _updateState(user);
+
   Future<void> login({required String phone, required String password}) async {
     if (kDebugMode) developer.log('Auth: login started', name: 'Auth');
     final (token, user) = await _ds.login(phone: phone, password: password);
@@ -98,3 +102,19 @@ class AuthNotifier extends Notifier<AuthState> {
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
+
+enum UserRole { warga, rt, bendahara, unknown }
+
+final currentUserRoleProvider = Provider<UserRole>((ref) {
+  final code = ref.watch(authProvider).user?.primaryRoleCode;
+  switch (code) {
+    case 'rt':
+      return UserRole.rt;
+    case 'bendahara':
+      return UserRole.bendahara;
+    case 'warga':
+      return UserRole.warga;
+    default:
+      return UserRole.unknown;
+  }
+});
