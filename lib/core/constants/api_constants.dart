@@ -89,6 +89,10 @@ class ApiConstants {
 
   // Asset / Inventory
   static const String assets = '/assets';
+  static String assetDetail(int id) => '/assets/$id';
+  static String assetMovements(int id) => '/assets/$id/movements';
+  static String assetMovement(int assetId, int movementId) =>
+      '/assets/$assetId/movements/$movementId';
 
   // Users (RT Admin)
   static const String users = '/users';
