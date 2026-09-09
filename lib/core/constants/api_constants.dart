@@ -28,6 +28,12 @@ class ApiConstants {
 
   // Notifications
   static const String notifications = '/notifications';
+  static String notificationMarkRead(int id) => '/notifications/$id/read';
+  static const String notificationMarkAllRead = '/notifications/read-all';
+
+  // Device Tokens
+  static const String deviceTokens = '/device-tokens';
+  static String deviceToken(String token) => '/device-tokens/$token';
 
   // Complaints
   static const String complaints = '/complaints';
@@ -77,9 +83,6 @@ class ApiConstants {
 
   // Asset / Inventory
   static const String assets = '/assets';
-
-  // Device tokens
-  static const String deviceTokens = '/device-tokens';
 
   // Users (RT Admin)
   static const String users = '/users';
