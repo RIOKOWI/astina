@@ -51,23 +51,35 @@ class ApiConstants {
   static const String letters = '/letters';
   static const String lettersPending = '/letters/pending';
 
-  // RT Administration
-  static const String residents = '/residents';
-  static const String households = '/households';
-  static const String users = '/users';
+  // Me endpoints (warga)
+  static const String meKtp = '/me/documents/ktp';
+  static const String meKtpFile = '/me/documents/ktp/file';
+  static const String meKk = '/me/documents/kk';
+  static const String meKkFile = '/me/documents/kk/file';
 
-  // RT Household members
-  static const String householdMembers = '/households/-/members';
-  // RT Resident account
-  static String residentAccount(int residentId) =>
-      '/residents/$residentId/account';
-  // RT User password reset
-  static String userResetPassword(int userId) =>
-      '/users/$userId/reset-password';
+  // Residents (RT Admin)
+  static const String residents = '/residents';
+  static String residentDetail(int id) => '/residents/$id';
+  static String residentKtpFile(int id) => '/residents/$id/documents/ktp/file';
+  static String residentKkFile(int id) => '/residents/$id/documents/kk/file';
+
+  // Households (RT Admin)
+  static const String households = '/households';
+  static String householdDetail(int id) => '/households/$id';
+  static String householdMembers(int id) => '/households/$id/members';
+  static String householdMember(int id, int residentId) =>
+      '/households/$id/members/$residentId';
 
   // Asset / Inventory
   static const String assets = '/assets';
 
   // Device tokens
   static const String deviceTokens = '/device-tokens';
+
+  // Users (RT Admin)
+  static const String users = '/users';
+  static String residentAccount(int residentId) =>
+      '/residents/$residentId/account';
+  static String userResetPassword(int userId) =>
+      '/users/$userId/reset-password';
 }
