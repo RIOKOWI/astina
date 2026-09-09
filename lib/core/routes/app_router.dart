@@ -17,6 +17,11 @@ import '../../features/residents/presentation/pages/households_page.dart';
 import '../../features/residents/presentation/pages/household_detail_page.dart';
 import '../../features/residents/presentation/pages/users_page.dart';
 import '../../features/residents/presentation/pages/user_detail_page.dart';
+import '../../features/dashboard/presentation/pages/activities_page.dart';
+import '../../features/dashboard/presentation/pages/activity_detail_page.dart';
+import '../../features/dashboard/presentation/pages/activity_form_page.dart';
+import '../../features/dashboard/presentation/pages/attachment_viewer_page.dart';
+import '../../features/dashboard/data/models/activity_model.dart';
 
 final _restrictedRoutes = {
   '/residents': [UserRole.rt],
@@ -160,6 +165,36 @@ final appRouter = GoRouter(
       name: 'user-detail',
       builder: (context, state) =>
           UserDetailPage(userId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/activities',
+      name: 'activities',
+      builder: (context, state) => const ActivitiesPage(),
+    ),
+    GoRoute(
+      path: '/activities/create',
+      name: 'activity-create',
+      builder: (context, state) => const ActivityFormPage(),
+    ),
+    GoRoute(
+      path: '/activities/:id',
+      name: 'activity-detail',
+      builder: (context, state) => ActivityDetailPage(
+        activityId: int.parse(state.pathParameters['id']!),
+      ),
+    ),
+    GoRoute(
+      path: '/activities/:id/edit',
+      name: 'activity-edit',
+      builder: (context, state) =>
+          ActivityFormPage(activityId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/activities/:activityId/attachments/:attachmentId',
+      builder: (context, state) {
+        final attachment = state.extra as ActivityAttachment;
+        return AttachmentViewerPage(attachment: attachment);
+      },
     ),
   ],
   errorBuilder: (context, state) =>
