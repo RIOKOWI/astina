@@ -17,6 +17,7 @@ import '../../features/residents/presentation/pages/households_page.dart';
 import '../../features/residents/presentation/pages/household_detail_page.dart';
 import '../../features/residents/presentation/pages/users_page.dart';
 import '../../features/residents/presentation/pages/user_detail_page.dart';
+import '../../features/fcm/presentation/pages/notifications_page.dart';
 import '../../features/dashboard/presentation/pages/activities_page.dart';
 import '../../features/dashboard/presentation/pages/activity_detail_page.dart';
 import '../../features/dashboard/presentation/pages/activity_form_page.dart';
@@ -105,6 +106,11 @@ final appRouter = GoRouter(
       path: '/change-password',
       name: 'change-password',
       builder: (context, state) => const ChangePasswordPage(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      builder: (context, state) => const NotificationsPage(),
     ),
     GoRoute(
       path: '/finance',
