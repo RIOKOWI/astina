@@ -21,6 +21,10 @@ import '../../features/fcm/presentation/pages/notifications_page.dart';
 import '../../features/complaints/presentation/pages/complaints_page.dart';
 import '../../features/complaints/presentation/pages/complaint_detail_page.dart';
 import '../../features/complaints/presentation/pages/complaint_create_page.dart';
+import '../../features/inventory/presentation/pages/inventory_page.dart';
+import '../../features/inventory/presentation/pages/asset_detail_page.dart';
+import '../../features/inventory/presentation/pages/asset_form_page.dart';
+import '../../features/inventory/presentation/pages/movement_form_page.dart';
 import '../../features/dashboard/presentation/pages/activities_page.dart';
 import '../../features/dashboard/presentation/pages/activity_detail_page.dart';
 import '../../features/dashboard/presentation/pages/activity_form_page.dart';
@@ -130,6 +134,34 @@ final appRouter = GoRouter(
       name: 'complaint-detail',
       builder: (context, state) =>
           ComplaintDetailPage(complaintId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/inventory',
+      name: 'inventory',
+      builder: (context, state) => const InventoryPage(),
+    ),
+    GoRoute(
+      path: '/inventory/create',
+      name: 'asset-create',
+      builder: (context, state) => const AssetFormPage(),
+    ),
+    GoRoute(
+      path: '/inventory/:id',
+      name: 'asset-detail',
+      builder: (context, state) =>
+          AssetDetailPage(assetId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/inventory/:id/edit',
+      name: 'asset-edit',
+      builder: (context, state) =>
+          AssetFormPage(assetId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/inventory/:id/movement',
+      name: 'asset-movement',
+      builder: (context, state) =>
+          MovementFormPage(assetId: int.parse(state.pathParameters['id']!)),
     ),
     GoRoute(
       path: '/finance',
