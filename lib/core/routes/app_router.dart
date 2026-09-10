@@ -7,20 +7,30 @@ import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/auth/presentation/pages/change_password_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/finance/presentation/pages/finance_page.dart';
+import '../../features/finance/presentation/pages/transactions_page.dart';
+import '../../features/finance/presentation/pages/transaction_form_page.dart';
+import '../../features/finance/presentation/pages/pending_payments_page.dart';
+import '../../features/finance/presentation/pages/dues_page.dart';
+import '../../features/finance/presentation/pages/my_due_bills_page.dart';
+import '../../features/finance/presentation/pages/my_payments_page.dart';
+import '../../features/finance/presentation/pages/payment_form_page.dart';
 import '../../features/sos/presentation/pages/sos_page.dart';
 import '../../features/my/presentation/pages/my_household_page.dart';
 import '../../features/residents/presentation/pages/my_resident_page.dart';
 import '../../features/residents/presentation/pages/my_document_page.dart';
 import '../../features/residents/presentation/pages/residents_page.dart';
 import '../../features/residents/presentation/pages/resident_detail_page.dart';
+import '../../features/residents/presentation/pages/resident_form_page.dart';
 import '../../features/residents/presentation/pages/households_page.dart';
 import '../../features/residents/presentation/pages/household_detail_page.dart';
+import '../../features/residents/presentation/pages/household_form_page.dart';
 import '../../features/residents/presentation/pages/users_page.dart';
 import '../../features/residents/presentation/pages/user_detail_page.dart';
 import '../../features/fcm/presentation/pages/notifications_page.dart';
 import '../../features/complaints/presentation/pages/complaints_page.dart';
 import '../../features/complaints/presentation/pages/complaint_detail_page.dart';
 import '../../features/complaints/presentation/pages/complaint_create_page.dart';
+import '../../features/residents/presentation/pages/document_viewer_page.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/inventory/presentation/pages/asset_detail_page.dart';
 import '../../features/inventory/presentation/pages/asset_form_page.dart';
@@ -132,8 +142,21 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/complaints/:id',
       name: 'complaint-detail',
-      builder: (context, state) =>
-          ComplaintDetailPage(complaintId: int.parse(state.pathParameters['id']!)),
+      builder: (context, state) => ComplaintDetailPage(
+        complaintId: int.parse(state.pathParameters['id']!),
+      ),
+    ),
+    GoRoute(
+      path: '/_document_viewer',
+      name: 'document-viewer',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return DocumentViewerPage(
+          title: extra['title'] as String,
+          fetchBytes: extra['fetchBytes'] as Future<List<int>> Function(),
+          fileName: extra['fileName'] as String,
+        );
+      },
     ),
     GoRoute(
       path: '/inventory',
@@ -169,6 +192,44 @@ final appRouter = GoRouter(
       builder: (context, state) => const FinancePage(),
     ),
     GoRoute(
+      path: '/finance/transactions',
+      name: 'finance-transactions',
+      builder: (context, state) => const TransactionsPage(),
+    ),
+    GoRoute(
+      path: '/finance/transactions/create',
+      name: 'finance-transaction-create',
+      builder: (context, state) => const TransactionFormPage(),
+    ),
+    GoRoute(
+      path: '/finance/payments/pending',
+      name: 'finance-payments-pending',
+      builder: (context, state) => const PendingPaymentsPage(),
+    ),
+    GoRoute(
+      path: '/finance/dues',
+      name: 'finance-dues',
+      builder: (context, state) => const DuesPage(),
+    ),
+    GoRoute(
+      path: '/finance/my/bills',
+      name: 'my-due-bills',
+      builder: (context, state) => const MyDueBillsPage(),
+    ),
+    GoRoute(
+      path: '/finance/my/bills/:id/pay',
+      name: 'my-payment-form',
+      builder: (context, state) {
+        final bill = state.extra;
+        return PaymentFormPage(bill: bill as dynamic);
+      },
+    ),
+    GoRoute(
+      path: '/finance/my/payments',
+      name: 'my-payments',
+      builder: (context, state) => const MyPaymentsPage(),
+    ),
+    GoRoute(
       path: '/sos',
       name: 'sos',
       builder: (context, state) => const SosPage(),
@@ -194,6 +255,17 @@ final appRouter = GoRouter(
       builder: (context, state) => const ResidentsPage(),
     ),
     GoRoute(
+      path: '/residents/create',
+      name: 'resident-create',
+      builder: (context, state) => const ResidentFormPage(),
+    ),
+    GoRoute(
+      path: '/residents/:id/edit',
+      name: 'resident-edit',
+      builder: (context, state) =>
+          ResidentFormPage(residentId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
       path: '/residents/:id',
       name: 'resident-detail',
       builder: (context, state) => ResidentDetailPage(
@@ -204,6 +276,18 @@ final appRouter = GoRouter(
       path: '/households',
       name: 'households',
       builder: (context, state) => const HouseholdsPage(),
+    ),
+    GoRoute(
+      path: '/households/create',
+      name: 'household-create',
+      builder: (context, state) => const HouseholdFormPage(),
+    ),
+    GoRoute(
+      path: '/households/:id/edit',
+      name: 'household-edit',
+      builder: (context, state) => HouseholdFormPage(
+        householdId: int.parse(state.pathParameters['id']!),
+      ),
     ),
     GoRoute(
       path: '/households/:id',
