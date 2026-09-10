@@ -85,7 +85,7 @@ class AdminResident {
 }
 
 class AdminResidentAccount {
-  final int id;
+  final int? id;
   final String? phone;
   final String? email;
   final bool isActive;
@@ -93,7 +93,7 @@ class AdminResidentAccount {
   final List<AdminRole>? roles;
 
   const AdminResidentAccount({
-    required this.id,
+    this.id,
     this.phone,
     this.email,
     required this.isActive,
@@ -103,7 +103,7 @@ class AdminResidentAccount {
 
   factory AdminResidentAccount.fromJson(Map<String, dynamic> json) {
     return AdminResidentAccount(
-      id: json['id'] as int,
+      id: json['id'] as int?,
       phone: json['phone'] as String?,
       email: json['email'] as String?,
       isActive: json['is_active'] as bool,
@@ -116,15 +116,15 @@ class AdminResidentAccount {
 }
 
 class AdminRole {
-  final int id;
+  final int? id;
   final String code;
   final String name;
 
-  const AdminRole({required this.id, required this.code, required this.name});
+  const AdminRole({this.id, required this.code, required this.name});
 
   factory AdminRole.fromJson(Map<String, dynamic> json) {
     return AdminRole(
-      id: json['id'] as int,
+      id: json['id'] as int?,
       code: json['code'] as String,
       name: json['name'] as String,
     );
