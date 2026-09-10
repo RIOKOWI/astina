@@ -24,6 +24,7 @@ import '../../features/residents/presentation/pages/resident_form_page.dart';
 import '../../features/residents/presentation/pages/households_page.dart';
 import '../../features/residents/presentation/pages/household_detail_page.dart';
 import '../../features/residents/presentation/pages/household_form_page.dart';
+import '../../features/residents/presentation/pages/account_form_page.dart';
 import '../../features/residents/presentation/pages/users_page.dart';
 import '../../features/residents/presentation/pages/user_detail_page.dart';
 import '../../features/fcm/presentation/pages/notifications_page.dart';
@@ -271,6 +272,12 @@ final appRouter = GoRouter(
       builder: (context, state) => ResidentDetailPage(
         residentId: int.parse(state.pathParameters['id']!),
       ),
+    ),
+    GoRoute(
+      path: '/residents/:id/account',
+      name: 'resident-account',
+      builder: (context, state) =>
+          AccountFormPage(residentId: int.parse(state.pathParameters['id']!)),
     ),
     GoRoute(
       path: '/households',
