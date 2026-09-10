@@ -1,7 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../providers/document_provider.dart';
@@ -49,11 +50,24 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
                     uploading: _uploadingKtp,
                     onUpload: () => _uploadKtp(),
                     onView: docs.ktp != null
-                        ? () => _viewFile(
+                        ? () => context.push(
+                            '/_document_viewer',
+                            extra: {
+                              'title': 'KTP',
+                              'fetchBytes': () => ref
+                                  .read(meDocumentDataSourceProvider)
+                                  .downloadKtp(),
+                              'fileName': docs.ktp!.fileName,
+                            },
+                          )
+                        : null,
+                    onDownload: docs.ktp != null
+                        ? () => _downloadToFolder(
                             'KTP',
                             () => ref
                                 .read(meDocumentDataSourceProvider)
                                 .downloadKtp(),
+                            docs.ktp!.fileName,
                           )
                         : null,
                   ),
@@ -65,11 +79,24 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
                     uploading: _uploadingKk,
                     onUpload: () => _uploadKk(),
                     onView: docs.kk != null
-                        ? () => _viewFile(
+                        ? () => context.push(
+                            '/_document_viewer',
+                            extra: {
+                              'title': 'KK',
+                              'fetchBytes': () => ref
+                                  .read(meDocumentDataSourceProvider)
+                                  .downloadKk(),
+                              'fileName': docs.kk!.fileName,
+                            },
+                          )
+                        : null,
+                    onDownload: docs.kk != null
+                        ? () => _downloadToFolder(
                             'KK',
                             () => ref
                                 .read(meDocumentDataSourceProvider)
                                 .downloadKk(),
+                            docs.kk!.fileName,
                           )
                         : null,
                   ),
@@ -142,6 +169,7 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
     required bool uploading,
     required VoidCallback onUpload,
     VoidCallback? onView,
+    VoidCallback? onDownload,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -220,6 +248,15 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
                       ),
                       onPressed: onView,
                       tooltip: 'Lihat dokumen',
+                    ),
+                  if (onDownload != null)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.download,
+                        color: AppColors.primary,
+                      ),
+                      onPressed: onDownload,
+                      tooltip: 'Simpan ke folder Download',
                     ),
                 ],
               ),
@@ -314,28 +351,37 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
     }
   }
 
-  Future<void> _viewFile(
+  Future<void> _downloadToFolder(
     String label,
     Future<List<int>> Function() fetch,
+    String fileName,
   ) async {
     final scaffold = ScaffoldMessenger.of(context);
-    scaffold.showSnackBar(SnackBar(content: Text('Mengunduh $label...')));
+    scaffold.showSnackBar(
+      SnackBar(content: Text('Menyimpan $label ke Downloads...')),
+    );
     try {
       final bytes = await fetch();
+      final downloadDir = Directory('/storage/emulated/0/Download');
+      if (!await downloadDir.exists()) {
+        throw 'Folder Download tidak ditemukan';
+      }
+      final destPath = '${downloadDir.path}/astina_$fileName';
+      final destFile = File(destPath);
+      await destFile.writeAsBytes(bytes);
       scaffold.hideCurrentSnackBar();
       scaffold.showSnackBar(
         SnackBar(
-          content: Text(
-            '$label berhasil diunduh (${(bytes.length / 1024).toStringAsFixed(1)} KB)',
-          ),
+          content: Text('Tersimpan: Downloads/astina_$fileName'),
           backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 4),
         ),
       );
     } catch (e) {
       scaffold.hideCurrentSnackBar();
       scaffold.showSnackBar(
         SnackBar(
-          content: Text('Gagal mengunduh: $e'),
+          content: Text('Gagal menyimpan: $e'),
           backgroundColor: AppColors.error,
         ),
       );
