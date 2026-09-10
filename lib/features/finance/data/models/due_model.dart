@@ -3,22 +3,22 @@ class DueModel {
   final String name;
   final String? description;
   final int amount;
-  final String frequency;
+  final String? frequency;
   final String? startDate;
   final String? endDate;
   final bool isActive;
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   const DueModel({
     required this.id,
     required this.name,
     this.description,
     required this.amount,
-    required this.frequency,
+    this.frequency,
     this.startDate,
     this.endDate,
     required this.isActive,
-    required this.createdAt,
+    this.createdAt,
   });
 
   factory DueModel.fromJson(Map<String, dynamic> json) {
@@ -27,11 +27,13 @@ class DueModel {
       name: json['name'] as String,
       description: json['description'] as String?,
       amount: json['amount'] as int,
-      frequency: json['frequency'] as String,
+      frequency: json['frequency'] as String?,
       startDate: json['start_date'] as String?,
       endDate: json['end_date'] as String?,
       isActive: json['is_active'] as bool,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
     );
   }
 
@@ -43,10 +45,10 @@ class DueModel {
         return 'Triwulanan';
       case 'yearly':
         return 'Tahunan';
-      case 'one-time':
+      case 'one_time':
         return 'Sekali';
       default:
-        return frequency;
+        return frequency ?? '-';
     }
   }
 }
