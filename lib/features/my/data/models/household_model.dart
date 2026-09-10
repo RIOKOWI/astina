@@ -22,6 +22,10 @@ class HouseholdModel {
   });
 
   factory HouseholdModel.fromJson(Map<String, dynamic> json) {
+    final headData = json['head_resident'];
+    if (headData == null) {
+      throw Exception('head_resident tidak ditemukan dalam response');
+    }
     return HouseholdModel(
       id: json['id'] as int,
       noKk: json['no_kk'] as String,
@@ -30,9 +34,7 @@ class HouseholdModel {
       rw: json['rw'] as String,
       postalCode: json['postal_code'] as String?,
       status: json['status'] as String,
-      headResident: HouseholdMember.fromJson(
-        json['head_resident'] as Map<String, dynamic>,
-      ),
+      headResident: HouseholdMember.fromJson(headData as Map<String, dynamic>),
       members: (json['members'] as List<dynamic>)
           .map((e) => HouseholdMember.fromJson(e as Map<String, dynamic>))
           .toList(),
