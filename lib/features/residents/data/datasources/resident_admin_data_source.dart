@@ -63,7 +63,7 @@ class ResidentAdminDataSource {
     return _client.downloadBytes(ApiConstants.residentKkFile(residentId));
   }
 
-  Future<void> createAccount(int residentId) async {
-    await _client.post(ApiConstants.residentAccount(residentId));
+  Future<void> createAccount(int residentId, Map<String, dynamic> body) async {
+    await _client.post(ApiConstants.residentAccount(residentId), data: body);
   }
 }
