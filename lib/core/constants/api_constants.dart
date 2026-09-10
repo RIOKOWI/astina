@@ -49,12 +49,16 @@ class ApiConstants {
   static const String financeTransactions = '/finance/transactions';
   static const String pendingPayments = '/payments/pending';
   static const String payments = '/payments';
+  static String paymentDetail(int id) => '/payments/$id';
+  static String paymentProof(int id) => '/payments/$id/proof';
+  static String paymentApprove(int id) => '/payments/$id/approve';
+  static String paymentReject(int id) => '/payments/$id/reject';
 
   // Bendahara / Dues & Expenses
   static const String dues = '/dues';
-  static const String expenses = '/expenses';
   static const String generateBills = '/dues/generate-bills';
-  static String dueBillsByDue(int dueId) => '/dues/$dueId/due-bills';
+  static String dueDetail(int id) => '/dues/$id';
+  static String dueBillsList(int id) => '/dues/$id/due-bills';
   static String generateDocument(int letterId) =>
       '/letters/$letterId/document/generate';
 
