@@ -159,15 +159,15 @@ abstract final class MenuConfig {
       route: '/dashboard',
     ),
     MenuItemModel(
-      icon: Icons.payments_outlined,
-      label: 'Pembayaran',
-      route: '/finance/payments/pending',
-      roles: [UserRole.bendahara],
-    ),
-    MenuItemModel(
       icon: Icons.account_balance_wallet_outlined,
       label: 'Kas RT',
       route: '/finance',
+      roles: [UserRole.bendahara],
+    ),
+    MenuItemModel(
+      icon: Icons.payments_outlined,
+      label: 'Approval Pembayaran',
+      route: '/finance/payments/pending',
       roles: [UserRole.bendahara],
     ),
     MenuItemModel(
