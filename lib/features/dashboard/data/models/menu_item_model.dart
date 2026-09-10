@@ -101,7 +101,7 @@ abstract final class MenuConfig {
     ),
     MenuItemModel(
       icon: Icons.admin_panel_settings_outlined,
-      label: 'User Admin',
+      label: 'Kelola User',
       route: '/users',
       roles: [UserRole.rt],
     ),
