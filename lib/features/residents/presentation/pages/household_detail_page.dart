@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../data/models/admin_household_model.dart';
+import '../../data/models/admin_resident_model.dart';
 import '../../providers/household_admin_provider.dart';
+import '../../providers/resident_admin_provider.dart';
 
 class HouseholdDetailPage extends ConsumerWidget {
   final int householdId;
@@ -394,11 +396,254 @@ class HouseholdDetailPage extends ConsumerWidget {
   }
 
   void _showAddMemberDialog(BuildContext context, WidgetRef ref) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Fitur tambah anggota via resident ID — hubungi developer',
-        ),
+    String relationship = 'spouse';
+    DateTime? joinedAt;
+    bool isSubmitting = false;
+    bool isSearching = false;
+    AdminResidentListItem? selectedResident;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (dialogCtx, innerSetState) {
+          return AlertDialog(
+            title: const Text('Tambah Anggota Keluarga'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Autocomplete<AdminResidentListItem>(
+                      displayStringForOption: (r) => '${r.fullName} (${r.nik})',
+                      optionsBuilder: (txt) async {
+                        if (txt.text.trim().length < 2) return [];
+                        innerSetState(() => isSearching = true);
+                        try {
+                          final ds = ref.read(residentAdminDataSourceProvider);
+                          final (list, _) = await ds.getResidents(
+                            search: txt.text.trim(),
+                            page: 1,
+                          );
+                          if (dialogCtx.mounted) {
+                            innerSetState(() {
+                              isSearching = false;
+                            });
+                          }
+                          return list;
+                        } catch (_) {
+                          if (dialogCtx.mounted) {
+                            innerSetState(() => isSearching = false);
+                          }
+                          return <AdminResidentListItem>[];
+                        }
+                      },
+                      onSelected: (r) =>
+                          innerSetState(() => selectedResident = r),
+                      fieldViewBuilder: (ctx, ctrl, focusNode, onSubmitted) {
+                        return TextField(
+                          controller: ctrl,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: 'Cari Warga (nama/NIK) *',
+                            hintText: 'Ketik nama atau NIK...',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: isSearching
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        );
+                      },
+                      optionsViewBuilder: (ctx, onSelect, options) => Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 200),
+                            child: options.isEmpty
+                                ? const ListTile(
+                                    dense: true,
+                                    title: Text('Tidak ada hasil'),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder: (ctx, i) {
+                                      final r = options.elementAt(i);
+                                      return ListTile(
+                                        dense: true,
+                                        title: Text(r.fullName),
+                                        subtitle: Text('NIK: ${r.nik}'),
+                                        onTap: () => onSelect(r),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (selectedResident != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: AppColors.success,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${selectedResident!.fullName} (${selectedResident!.nik})',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () =>
+                                  innerSetState(() => selectedResident = null),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: relationship,
+                      decoration: const InputDecoration(
+                        labelText: 'Hubungan *',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'spouse',
+                          child: Text('Pasangan'),
+                        ),
+                        DropdownMenuItem(value: 'child', child: Text('Anak')),
+                        DropdownMenuItem(
+                          value: 'parent',
+                          child: Text('Orang Tua'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'sibling',
+                          child: Text('Saudara'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'other',
+                          child: Text('Lainnya'),
+                        ),
+                      ],
+                      onChanged: (v) => innerSetState(() => relationship = v!),
+                    ),
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () async {
+                        final d = await showDatePicker(
+                          context: dialogCtx,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
+                        );
+                        if (d != null) innerSetState(() => joinedAt = d);
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Tanggal Masuk (opsional)',
+                          border: OutlineInputBorder(),
+                          suffixIcon: Icon(Icons.calendar_today, size: 20),
+                        ),
+                        child: Text(
+                          joinedAt != null
+                              ? '${joinedAt!.day}/${joinedAt!.month}/${joinedAt!.year}'
+                              : '-',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: isSubmitting || selectedResident == null
+                    ? null
+                    : () async {
+                        innerSetState(() => isSubmitting = true);
+                        try {
+                          final ds = ref.read(householdAdminDataSourceProvider);
+                          await ds.addMember(householdId, {
+                            'resident_id': selectedResident!.id,
+                            'relationship': relationship,
+                            if (joinedAt != null)
+                              'joined_at': joinedAt!
+                                  .toIso8601String()
+                                  .split('T')
+                                  .first,
+                          });
+                          ref.invalidate(householdDetailProvider(householdId));
+                          if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Anggota berhasil ditambahkan'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          innerSetState(() => isSubmitting = false);
+                          String msg;
+                          if (e.toString().contains('409')) {
+                            msg =
+                                'Warga ini sudah terdaftar di keluarga lain atau sudah menjadi anggota';
+                          } else if (e.toString().contains('422')) {
+                            msg =
+                                'Data tidak valid. Pastikan warga belum terdaftar.';
+                          } else {
+                            msg = 'Gagal: $e';
+                          }
+                          if (dialogCtx.mounted) {
+                            ScaffoldMessenger.of(dialogCtx).showSnackBar(
+                              SnackBar(
+                                content: Text(msg),
+                                backgroundColor: AppColors.error,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Tambah'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
