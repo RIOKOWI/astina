@@ -115,6 +115,48 @@ class ResidentDetailPage extends ConsumerWidget {
                     r.account!.roles!.map((role) => role.name).join(', '),
                   ),
               ]),
+            ] else if (r.status == 'active') ...[
+              const SizedBox(height: 16),
+              _buildInfoCard('Akun Aplikasi', [
+                const Row(
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                        'Status',
+                        style: TextStyle(fontSize: 13, color: AppColors.grey),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Belum punya akun',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.dark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push('/residents/${r.id}/account'),
+                    icon: const Icon(Icons.person_add, size: 18),
+                    label: const Text('Buat Akun'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ]),
             ],
             const SizedBox(height: 16),
             _buildInfoCard('Dokumen', [
