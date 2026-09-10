@@ -14,10 +14,25 @@ class MyResidentPage extends ConsumerStatefulWidget {
 class _MyResidentPageState extends ConsumerState<MyResidentPage> {
   bool _isEditing = false;
   final _formKey = GlobalKey<FormState>();
+  TextEditingController? _nikController;
   TextEditingController? _nameController;
+  TextEditingController? _birthPlaceController;
   TextEditingController? _occupationController;
   TextEditingController? _educationController;
   String? _gender;
+  String? _religion;
+  String? _maritalStatus;
+  DateTime? _birthDate;
+
+  @override
+  void dispose() {
+    _nikController?.dispose();
+    _nameController?.dispose();
+    _birthPlaceController?.dispose();
+    _occupationController?.dispose();
+    _educationController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +102,11 @@ class _MyResidentPageState extends ConsumerState<MyResidentPage> {
   }
 
   void _initEditControllers(dynamic resident) {
+    _nikController ??= TextEditingController(text: resident.nik);
     _nameController ??= TextEditingController(text: resident.fullName);
+    _birthPlaceController ??= TextEditingController(
+      text: resident.birthPlace ?? '',
+    );
     _occupationController ??= TextEditingController(
       text: resident.occupation ?? '',
     );
@@ -95,6 +114,13 @@ class _MyResidentPageState extends ConsumerState<MyResidentPage> {
       text: resident.lastEducation ?? '',
     );
     _gender ??= resident.gender;
+    _religion ??= resident.religion;
+    _maritalStatus ??= resident.maritalStatus;
+    if (resident.birthDate != null) {
+      try {
+        _birthDate = DateTime.parse(resident.birthDate!);
+      } catch (_) {}
+    }
   }
 
   void _startEditing() {
@@ -253,30 +279,133 @@ class _MyResidentPageState extends ConsumerState<MyResidentPage> {
           ),
           const SizedBox(height: 16),
           TextFormField(
+            controller: _nikController,
+            decoration: const InputDecoration(
+              labelText: 'NIK *',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.number,
+            validator: (v) =>
+                v == null || v.isEmpty ? 'NIK wajib diisi' : null,
+          ),
+          TextFormField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+            decoration: const InputDecoration(
+              labelText: 'Nama Lengkap *',
+              border: OutlineInputBorder(),
+            ),
+            validator: (v) =>
+                v == null || v.isEmpty ? 'Nama wajib diisi' : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
-            controller: _occupationController,
-            decoration: const InputDecoration(labelText: 'Pekerjaan'),
+            controller: _birthPlaceController,
+            decoration: const InputDecoration(
+              labelText: 'Tempat Lahir',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 12),
-          TextFormField(
-            controller: _educationController,
-            decoration: const InputDecoration(labelText: 'Pendidikan Terakhir'),
+          _dateField(
+            'Tanggal Lahir',
+            _birthDate,
+            (d) => setState(() => _birthDate = d),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _gender,
-            decoration: const InputDecoration(labelText: 'Jenis Kelamin'),
+            decoration: const InputDecoration(
+              labelText: 'Jenis Kelamin *',
+              border: OutlineInputBorder(),
+            ),
             items: const [
               DropdownMenuItem(value: 'male', child: Text('Laki-laki')),
               DropdownMenuItem(value: 'female', child: Text('Perempuan')),
             ],
             onChanged: (v) => setState(() => _gender = v ?? _gender),
+            validator: (v) => v == null ? 'Jenis kelamin wajib dipilih' : null,
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _religion,
+            decoration: const InputDecoration(
+              labelText: 'Agama',
+              border: OutlineInputBorder(),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'islam', child: Text('Islam')),
+              DropdownMenuItem(value: 'kristen', child: Text('Kristen')),
+              DropdownMenuItem(value: 'katolik', child: Text('Katolik')),
+              DropdownMenuItem(value: 'hindu', child: Text('Hindu')),
+              DropdownMenuItem(value: 'buddha', child: Text('Buddha')),
+              DropdownMenuItem(value: 'konghucu', child: Text('Konghucu')),
+            ],
+            onChanged: (v) => setState(() => _religion = v),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _maritalStatus,
+            decoration: const InputDecoration(
+              labelText: 'Status Pernikahan *',
+              border: OutlineInputBorder(),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'single', child: Text('Belum Menikah')),
+              DropdownMenuItem(value: 'married', child: Text('Menikah')),
+              DropdownMenuItem(value: 'divorced', child: Text('Cerai')),
+              DropdownMenuItem(value: 'widowed', child: Text('Duda/Janda')),
+            ],
+            onChanged: (v) =>
+                setState(() => _maritalStatus = v ?? _maritalStatus),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _occupationController,
+            decoration: const InputDecoration(
+              labelText: 'Pekerjaan',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _educationController,
+            decoration: const InputDecoration(
+              labelText: 'Pendidikan Terakhir',
+              border: OutlineInputBorder(),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _dateField(
+    String label,
+    DateTime? value,
+    void Function(DateTime?) onChanged,
+  ) {
+    return InkWell(
+      onTap: () async {
+        final d = await showDatePicker(
+          context: context,
+          initialDate: value ?? DateTime(1990),
+          firstDate: DateTime(1940),
+          lastDate: DateTime.now(),
+        );
+        onChanged(d);
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          suffixIcon: const Icon(Icons.calendar_today, size: 20),
+        ),
+        child: Text(
+          value != null ? '${value.day}/${value.month}/${value.year}' : '-',
+          style: TextStyle(
+            color: value != null ? AppColors.dark : AppColors.grey,
+          ),
+        ),
       ),
     );
   }
@@ -285,12 +414,26 @@ class _MyResidentPageState extends ConsumerState<MyResidentPage> {
     if (!_formKey.currentState!.validate()) return;
     try {
       final ds = ref.read(meResidentDataSourceProvider);
-      await ds.updateMeResident({
-        'full_name': _nameController!.text,
-        'occupation': _occupationController!.text,
-        'last_education': _educationController!.text,
+      final body = <String, dynamic>{
+        'nik': _nikController!.text.trim(),
+        'full_name': _nameController!.text.trim(),
         'gender': _gender!,
-      });
+        'marital_status': _maritalStatus!,
+      };
+      if (_birthPlaceController!.text.isNotEmpty) {
+        body['birth_place'] = _birthPlaceController!.text.trim();
+      }
+      if (_birthDate != null) {
+        body['birth_date'] = _birthDate!.toIso8601String().split('T').first;
+      }
+      if (_religion != null) body['religion'] = _religion;
+      if (_occupationController!.text.isNotEmpty) {
+        body['occupation'] = _occupationController!.text.trim();
+      }
+      if (_educationController!.text.isNotEmpty) {
+        body['last_education'] = _educationController!.text.trim();
+      }
+      await ds.updateMeResident(body);
       ref.invalidate(meResidentProvider);
       if (mounted) {
         setState(() => _isEditing = false);
