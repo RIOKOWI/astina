@@ -46,14 +46,14 @@ class FinanceTransaction {
 
 class TransactionCreator {
   final int id;
-  final String name;
+  final String? name;
 
-  const TransactionCreator({required this.id, required this.name});
+  const TransactionCreator({required this.id, this.name});
 
   factory TransactionCreator.fromJson(Map<String, dynamic> json) {
     return TransactionCreator(
       id: json['id'] as int,
-      name: json['name'] as String,
+      name: json['name'] as String?,
     );
   }
 }
