@@ -56,7 +56,8 @@ class InventoryRemoteDataSource {
         'name': name,
         'category': category,
         'unit': unit,
-        if (description != null && description.isNotEmpty) 'description': description,
+        if (description != null && description.isNotEmpty)
+          'description': description,
         if (quantity != null) 'quantity': quantity,
         if (purchasePrice != null) 'purchase_price': purchasePrice,
         if (purchaseDate != null) 'purchase_date': purchaseDate,
@@ -140,7 +141,8 @@ class InventoryRemoteDataSource {
       data: {
         'type': type,
         'quantity': quantity,
-        if (description != null && description.isNotEmpty) 'description': description,
+        if (description != null && description.isNotEmpty)
+          'description': description,
         if (movementAt != null) 'movement_at': movementAt,
       },
     );
