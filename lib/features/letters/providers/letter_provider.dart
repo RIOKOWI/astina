@@ -15,6 +15,12 @@ final letterTypesProvider = FutureProvider.autoDispose<List<LetterType>>((
   return ds.getLetterTypes();
 });
 
+final letterTypeDetailProvider =
+    FutureProvider.autoDispose.family<LetterType, int>((ref, id) async {
+  final ds = ref.watch(letterRemoteDataSourceProvider);
+  return ds.getLetterTypeDetail(id);
+});
+
 final myLettersProvider = FutureProvider.autoDispose
     .family<
       List<LetterListItem>,

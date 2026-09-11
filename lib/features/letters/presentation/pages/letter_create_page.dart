@@ -132,13 +132,22 @@ class _LetterCreatePageState extends ConsumerState<LetterCreatePage> {
     );
   }
 
-  void _showSubmissionSheet(LetterType type) {
+  void _showSubmissionSheet(LetterType type) async {
+    // Fetch detail to get complete fields (list response does not include fields)
+    LetterType detailedType;
+    try {
+      detailedType = await ref
+          .read(letterTypeDetailProvider(type.id).future);
+    } catch (_) {
+      detailedType = type;
+    }
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => LetterSubmissionSheet(
-        letterType: type,
+        letterType: detailedType,
         onSuccess: () {
           ref.invalidate(
             myLettersProvider((status: null, letterTypeId: null, page: 1)),
