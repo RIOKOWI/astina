@@ -32,11 +32,12 @@ class HouseholdModel {
       status: json['status'] as String?,
       headResident: json['head_resident'] != null
           ? HouseholdMember.fromJson(
-              json['head_resident'] as Map<String, dynamic>)
+              json['head_resident'] as Map<String, dynamic>,
+            )
           : null,
-      members: (json['members'] as List<dynamic>?)
-              ?.map(
-                  (e) => HouseholdMember.fromJson(e as Map<String, dynamic>))
+      members:
+          (json['members'] as List<dynamic>?)
+              ?.map((e) => HouseholdMember.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
