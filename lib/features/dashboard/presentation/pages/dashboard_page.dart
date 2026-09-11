@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../sos/providers/sos_provider.dart';
+import '../../../sos/services/sos_audio_service.dart';
 import '../../data/models/menu_item_model.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -32,6 +36,12 @@ class DashboardPage extends ConsumerWidget {
         ),
         drawer: _buildDrawer(context, ref, user, menuItems),
         body: _DashboardHome(user: user, role: role),
+        floatingActionButton: FloatingActionButton.large(
+          heroTag: 'sos_fab',
+          backgroundColor: AppColors.error,
+          onPressed: () => _onSosPressed(context, ref),
+          child: const Icon(Icons.warning_rounded, size: 36, color: Colors.white),
+        ),
       ),
     );
   }
@@ -244,6 +254,117 @@ class DashboardPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _onSosPressed(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: AppColors.error),
+            SizedBox(width: 8),
+            Text('Konfirmasi SOS'),
+          ],
+        ),
+        content: const Text(
+          'Kirim peringatan SOS darurat ke semua warga?\n'
+          'Lokasi Anda akan dikirimkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Kirim SOS'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('GPS nonaktif. Aktifkan untuk mengirim SOS.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Izin lokasi ditolak.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Izin lokasi ditolak permanen.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Mengirim SOS...'),
+        backgroundColor: AppColors.dark,
+      ),
+    );
+
+    HapticFeedback.heavyImpact();
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+
+      final alert = await ref.read(sosNotifierProvider.notifier).triggerSos(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
+
+      SosAudioService.instance.playSiren();
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('SOS terkirim! oleh ${alert.triggeredBy.name}.'),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      if (context.mounted) context.go('/sos/${alert.id}');
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim SOS: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 }
 
