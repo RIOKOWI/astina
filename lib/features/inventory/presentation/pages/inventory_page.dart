@@ -31,7 +31,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
     super.dispose();
   }
 
-  void _load() => ref.read(inventoryListProvider.notifier).load(
+  void _load() => ref
+      .read(inventoryListProvider.notifier)
+      .load(
         search: _searchController.text.isEmpty ? null : _searchController.text,
         category: _categoryFilter,
         condition: _conditionFilter,
@@ -131,15 +133,13 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                   ? _buildEmpty()
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount:
-                          state.assets.length + (state.hasMore ? 1 : 0),
+                      itemCount: state.assets.length + (state.hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == state.assets.length) {
                           if (state.isLoading) {
                             return const Padding(
                               padding: EdgeInsets.all(16),
-                              child: Center(
-                                  child: CircularProgressIndicator()),
+                              child: Center(child: CircularProgressIndicator()),
                             );
                           }
                           ref
@@ -156,8 +156,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                         }
                         return _AssetCard(
                           asset: state.assets[index],
-                          onTap: () => context
-                              .push('/inventory/${state.assets[index].id}'),
+                          onTap: () => context.push(
+                            '/inventory/${state.assets[index].id}',
+                          ),
                         );
                       },
                     ),
@@ -180,8 +181,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
         const Center(
           child: Column(
             children: [
-              Icon(Icons.inventory_2_outlined,
-                  size: 64, color: AppColors.grey),
+              Icon(Icons.inventory_2_outlined, size: 64, color: AppColors.grey),
               SizedBox(height: 16),
               Text(
                 'Belum ada aset',
@@ -240,14 +240,19 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Filter',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.dark)),
+            const Text(
+              'Filter',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.dark,
+              ),
+            ),
             const SizedBox(height: 16),
-            const Text('Kondisi',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            const Text(
+              'Kondisi',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -256,29 +261,63 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                 _filterChip('Semua', null, (v) {
                   setState(() => _conditionFilter = v);
                 }),
-                _filterChip('Baru', 'new', (v) => setState(() => _conditionFilter = v)),
-                _filterChip('Baik', 'good', (v) => setState(() => _conditionFilter = v)),
-                _filterChip('Cukup', 'fair', (v) => setState(() => _conditionFilter = v)),
-                _filterChip('Rusak', 'poor', (v) => setState(() => _conditionFilter = v)),
+                _filterChip(
+                  'Baru',
+                  'new',
+                  (v) => setState(() => _conditionFilter = v),
+                ),
+                _filterChip(
+                  'Baik',
+                  'good',
+                  (v) => setState(() => _conditionFilter = v),
+                ),
+                _filterChip(
+                  'Cukup',
+                  'fair',
+                  (v) => setState(() => _conditionFilter = v),
+                ),
+                _filterChip(
+                  'Rusak',
+                  'poor',
+                  (v) => setState(() => _conditionFilter = v),
+                ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Status',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            const Text(
+              'Status',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                _filterChip('Semua', null, (v) => setState(() => _statusFilter = v)),
-                _filterChip('Tersedia', 'available',
-                    (v) => setState(() => _statusFilter = v)),
-                _filterChip('Dipakai', 'in_use',
-                    (v) => setState(() => _statusFilter = v)),
-                _filterChip('Perbaikan', 'maintenance',
-                    (v) => setState(() => _statusFilter = v)),
-                _filterChip('Nonaktif', 'retired',
-                    (v) => setState(() => _statusFilter = v)),
+                _filterChip(
+                  'Semua',
+                  null,
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Tersedia',
+                  'available',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Dipakai',
+                  'in_use',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Perbaikan',
+                  'maintenance',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Nonaktif',
+                  'retired',
+                  (v) => setState(() => _statusFilter = v),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -293,10 +332,13 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                   backgroundColor: AppColors.primary,
                   minimumSize: const Size.fromHeight(52),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                child: const Text('Terapkan',
-                    style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  'Terapkan',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],
@@ -306,8 +348,12 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
   }
 
   Widget _filterChip(
-      String label, String? value, void Function(String?) onSelected) {
-    final isSelected = value == null ||
+    String label,
+    String? value,
+    void Function(String?) onSelected,
+  ) {
+    final isSelected =
+        value == null ||
         (_conditionFilter == value) ||
         (_statusFilter == value);
     return ChoiceChip(
@@ -369,8 +415,10 @@ class _AssetCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: _statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -408,16 +456,17 @@ class _AssetCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.dark.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     asset.category,
-                    style:
-                        const TextStyle(fontSize: 11, color: AppColors.grey),
+                    style: const TextStyle(fontSize: 11, color: AppColors.grey),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -429,16 +478,17 @@ class _AssetCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.dark.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     asset.conditionLabel,
-                    style:
-                        const TextStyle(fontSize: 11, color: AppColors.grey),
+                    style: const TextStyle(fontSize: 11, color: AppColors.grey),
                   ),
                 ),
               ],
