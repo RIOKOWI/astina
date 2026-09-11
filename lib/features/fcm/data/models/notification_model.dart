@@ -73,7 +73,7 @@ class AppNotification {
       case 'letter_rejected':
       case 'letter_completed':
         final id = letterId;
-        return id != null ? '/letters/$id' : '/letters/my';
+        return id != null ? '/letters/$id' : '/letters';
       case 'payment_submitted':
       case 'payment_approved':
       case 'payment_rejected':
