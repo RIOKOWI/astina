@@ -31,7 +31,9 @@ class _ComplaintsPageState extends ConsumerState<ComplaintsPage> {
     super.dispose();
   }
 
-  void _load() => ref.read(complaintsListProvider.notifier).load(
+  void _load() => ref
+      .read(complaintsListProvider.notifier)
+      .load(
         search: _searchController.text.isEmpty ? null : _searchController.text,
         status: _statusFilter,
         category: _categoryFilter,
@@ -45,8 +47,8 @@ class _ComplaintsPageState extends ConsumerState<ComplaintsPage> {
     final myResidentId = ref.watch(authProvider).user?.resident?.id;
     // Jika response warga: backend sudah filter, resident tidak ada di tiap item.
     // Jika response RT: tampilkan semua.
-    final hasResidents = state.complaints.isNotEmpty &&
-        state.complaints.first.resident != null;
+    final hasResidents =
+        state.complaints.isNotEmpty && state.complaints.first.resident != null;
     final complaints = isWarga && myResidentId != null && hasResidents
         ? state.complaints.where((c) => c.residentId == myResidentId).toList()
         : state.complaints;
@@ -139,8 +141,9 @@ class _ComplaintsPageState extends ConsumerState<ComplaintsPage> {
                         }
                         return _ComplaintCard(
                           complaint: complaints[index],
-                          onTap: () => context
-                              .push('/complaints/${complaints[index].id}'),
+                          onTap: () => context.push(
+                            '/complaints/${complaints[index].id}',
+                          ),
                         );
                       },
                     ),
@@ -234,29 +237,88 @@ class _ComplaintsPageState extends ConsumerState<ComplaintsPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _filterChip('Semua', null, (v) => setState(() => _statusFilter = v)),
-                _filterChip('Baru', 'submitted', (v) => setState(() => _statusFilter = v)),
-                _filterChip('Ditinjau', 'reviewed', (v) => setState(() => _statusFilter = v)),
-                _filterChip('Diproses', 'in_progress', (v) => setState(() => _statusFilter = v)),
-                _filterChip('Selesai', 'resolved', (v) => setState(() => _statusFilter = v)),
-                _filterChip('Ditutup', 'closed', (v) => setState(() => _statusFilter = v)),
-                _filterChip('Ditolak', 'rejected', (v) => setState(() => _statusFilter = v)),
+                _filterChip(
+                  'Semua',
+                  null,
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Baru',
+                  'submitted',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Ditinjau',
+                  'reviewed',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Diproses',
+                  'in_progress',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Selesai',
+                  'resolved',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Ditutup',
+                  'closed',
+                  (v) => setState(() => _statusFilter = v),
+                ),
+                _filterChip(
+                  'Ditolak',
+                  'rejected',
+                  (v) => setState(() => _statusFilter = v),
+                ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Kategori', style: TextStyle(fontWeight: FontWeight.w600)),
+            const Text(
+              'Kategori',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                _filterChip('Semua', null, (v) => setState(() => _categoryFilter = v)),
-                _filterChip('Fasilitas', 'facility', (v) => setState(() => _categoryFilter = v)),
-                _filterChip('Keamanan', 'security', (v) => setState(() => _categoryFilter = v)),
-                _filterChip('Kebersihan', 'cleanliness', (v) => setState(() => _categoryFilter = v)),
-                _filterChip('Kebisingan', 'noise', (v) => setState(() => _categoryFilter = v)),
-                _filterChip('Perselisihan', 'dispute', (v) => setState(() => _categoryFilter = v)),
-                _filterChip('Lainnya', 'other', (v) => setState(() => _categoryFilter = v)),
+                _filterChip(
+                  'Semua',
+                  null,
+                  (v) => setState(() => _categoryFilter = v),
+                ),
+                _filterChip(
+                  'Fasilitas',
+                  'facility',
+                  (v) => setState(() => _categoryFilter = v),
+                ),
+                _filterChip(
+                  'Keamanan',
+                  'security',
+                  (v) => setState(() => _categoryFilter = v),
+                ),
+                _filterChip(
+                  'Kebersihan',
+                  'cleanliness',
+                  (v) => setState(() => _categoryFilter = v),
+                ),
+                _filterChip(
+                  'Kebisingan',
+                  'noise',
+                  (v) => setState(() => _categoryFilter = v),
+                ),
+                _filterChip(
+                  'Perselisihan',
+                  'dispute',
+                  (v) => setState(() => _categoryFilter = v),
+                ),
+                _filterChip(
+                  'Lainnya',
+                  'other',
+                  (v) => setState(() => _categoryFilter = v),
+                ),
               ],
             ),
           ],
@@ -274,11 +336,18 @@ class _ComplaintsPageState extends ConsumerState<ComplaintsPage> {
     );
   }
 
-  Widget _filterChip(String label, String? value, void Function(String?) onSelected) {
-    final isSelected = (value == null && _statusFilter == null && _categoryFilter == null) == false;
+  Widget _filterChip(
+    String label,
+    String? value,
+    void Function(String?) onSelected,
+  ) {
+    final isSelected =
+        (value == null && _statusFilter == null && _categoryFilter == null) ==
+        false;
     return ChoiceChip(
       label: Text(label),
-      selected: isSelected && (_statusFilter == value || _categoryFilter == value),
+      selected:
+          isSelected && (_statusFilter == value || _categoryFilter == value),
       onSelected: (_) => onSelected(value),
     );
   }
@@ -335,14 +404,14 @@ class _ComplaintCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     complaint.referenceNo,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 11, color: AppColors.grey),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: _statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -380,7 +449,10 @@ class _ComplaintCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.dark.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(4),
@@ -399,7 +471,8 @@ class _ComplaintCard extends StatelessWidget {
                     style: const TextStyle(fontSize: 12, color: AppColors.grey),
                   ),
                 ],
-                if (complaint.attachmentCount != null && complaint.attachmentCount! > 0) ...[
+                if (complaint.attachmentCount != null &&
+                    complaint.attachmentCount! > 0) ...[
                   const SizedBox(width: 8),
                   Icon(Icons.attach_file, size: 14, color: AppColors.grey),
                   const SizedBox(width: 2),
