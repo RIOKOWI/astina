@@ -15,7 +15,8 @@ class ComplaintDetailPage extends ConsumerStatefulWidget {
   const ComplaintDetailPage({super.key, required this.complaintId});
 
   @override
-  ConsumerState<ComplaintDetailPage> createState() => _ComplaintDetailPageState();
+  ConsumerState<ComplaintDetailPage> createState() =>
+      _ComplaintDetailPageState();
 }
 
 class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
@@ -48,7 +49,10 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Text('Error: $e', style: const TextStyle(color: AppColors.error)),
+            child: Text(
+              'Error: $e',
+              style: const TextStyle(color: AppColors.error),
+            ),
           ),
         ),
       ),
@@ -115,15 +119,22 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(c.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(c.statusLabel, style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w600,
-                  color: _statusColor(c.status),
-                )),
+                child: Text(
+                  c.statusLabel,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _statusColor(c.status),
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Container(
@@ -132,28 +143,36 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
                   color: AppColors.dark.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(c.categoryLabel, style: const TextStyle(
-                  fontSize: 11, color: AppColors.grey,
-                )),
+                child: Text(
+                  c.categoryLabel,
+                  style: const TextStyle(fontSize: 11, color: AppColors.grey),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(c.referenceNo, style: const TextStyle(
-            fontSize: 12, color: AppColors.grey,
-          )),
+          Text(
+            c.referenceNo,
+            style: const TextStyle(fontSize: 12, color: AppColors.grey),
+          ),
           const SizedBox(height: 4),
-          Text(c.title, style: const TextStyle(
-            fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.dark,
-          )),
+          Text(
+            c.title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.dark,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
               const Icon(Icons.person, size: 14, color: AppColors.grey),
               const SizedBox(width: 4),
-              Text(c.resident!.fullName, style: const TextStyle(
-                fontSize: 13, color: AppColors.grey,
-              )),
+              Text(
+                c.resident!.fullName,
+                style: const TextStyle(fontSize: 13, color: AppColors.grey),
+              ),
             ],
           ),
         ],
@@ -221,13 +240,19 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Deskripsi', style: TextStyle(
-            fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.grey,
-          )),
+          const Text(
+            'Deskripsi',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.grey,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(c.description!, style: const TextStyle(
-            fontSize: 14, color: AppColors.dark,
-          )),
+          Text(
+            c.description!,
+            style: const TextStyle(fontSize: 14, color: AppColors.dark),
+          ),
         ],
       ),
     );
@@ -249,15 +274,21 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
             children: [
               Icon(Icons.block, size: 16, color: AppColors.error),
               SizedBox(width: 8),
-              Text('Alasan Penolakan', style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.error,
-              )),
+              Text(
+                'Alasan Penolakan',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.error,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(c.rejectionReason!, style: const TextStyle(
-            fontSize: 14, color: AppColors.dark,
-          )),
+          Text(
+            c.rejectionReason!,
+            style: const TextStyle(fontSize: 14, color: AppColors.dark),
+          ),
         ],
       ),
     );
@@ -284,9 +315,14 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Ubah Status', style: TextStyle(
-            fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.dark,
-          )),
+          const Text(
+            'Ubah Status',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.dark,
+            ),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -302,7 +338,10 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(e.value, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                child: Text(
+                  e.value,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
               );
             }).toList(),
           ),
@@ -351,7 +390,11 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
               onPressed: () async {
                 if (reasonController.text.trim().isEmpty) return;
                 Navigator.of(ctx).pop();
-                await _changeStatus(c.id, newStatus, reasonController.text.trim());
+                await _changeStatus(
+                  c.id,
+                  newStatus,
+                  reasonController.text.trim(),
+                );
               },
               child: const Text('Tolak'),
             ),
@@ -383,11 +426,9 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
 
   Future<void> _changeStatus(int id, String status, String? reason) async {
     try {
-      await ref.read(complaintDataSourceProvider).updateStatus(
-        id,
-        status: status,
-        rejectionReason: reason,
-      );
+      await ref
+          .read(complaintDataSourceProvider)
+          .updateStatus(id, status: status, rejectionReason: reason);
       ref.invalidate(complaintDetailProvider(id));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -414,9 +455,14 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Komentar (${comments.length})', style: const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.dark,
-        )),
+        Text(
+          'Komentar (${comments.length})',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.dark,
+          ),
+        ),
         const SizedBox(height: 12),
         if (comments.isEmpty)
           Container(
@@ -427,7 +473,10 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Center(
-              child: Text('Belum ada komentar', style: TextStyle(color: AppColors.grey)),
+              child: Text(
+                'Belum ada komentar',
+                style: TextStyle(color: AppColors.grey),
+              ),
             ),
           )
         else
@@ -443,23 +492,31 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
       children: [
         Row(
           children: [
-            Text('Lampiran (${attachments.length})', style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.dark,
-            )),
+            Text(
+              'Lampiran (${attachments.length})',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.dark,
+              ),
+            ),
             const Spacer(),
             _isUploading
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : IconButton(
-                      icon: const Icon(Icons.add_circle, color: AppColors.primary),
-                      onPressed: () => _uploadAttachment(),
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
+                  )
+                : IconButton(
+                    icon: const Icon(
+                      Icons.add_circle,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: () => _uploadAttachment(),
+                  ),
           ],
         ),
         const SizedBox(height: 8),
@@ -472,16 +529,21 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Center(
-              child: Text('Belum ada lampiran', style: TextStyle(color: AppColors.grey)),
+              child: Text(
+                'Belum ada lampiran',
+                style: TextStyle(color: AppColors.grey),
+              ),
             ),
           )
         else
-          ...attachments.map((a) => _AttachmentTile(
-            a: a,
-            isRT: isRT,
-            complaintId: c.id,
-            onDelete: () => _deleteAttachment(c.id, a.id),
-          )),
+          ...attachments.map(
+            (a) => _AttachmentTile(
+              a: a,
+              isRT: isRT,
+              complaintId: c.id,
+              onDelete: () => _deleteAttachment(c.id, a.id),
+            ),
+          ),
       ],
     );
   }
@@ -589,7 +651,9 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
 
   Future<void> _deleteAttachment(int complaintId, int attachmentId) async {
     try {
-      await ref.read(complaintDataSourceProvider).deleteAttachment(complaintId, attachmentId);
+      await ref
+          .read(complaintDataSourceProvider)
+          .deleteAttachment(complaintId, attachmentId);
       ref.invalidate(complaintDetailProvider(complaintId));
     } catch (_) {}
   }
@@ -622,10 +686,18 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: AppColors.grey)),
-            Text(value, style: const TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.dark,
-            )),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: AppColors.grey),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.dark,
+              ),
+            ),
           ],
         ),
       ],
@@ -673,7 +745,9 @@ class _CommentTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: comment.user.isRT ? AppColors.primary : AppColors.dark,
+                    color: comment.user.isRT
+                        ? AppColors.primary
+                        : AppColors.dark,
                   ),
                 ),
               ),
@@ -684,27 +758,43 @@ class _CommentTile extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(comment.user.name, style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.dark,
-                        )),
+                        Text(
+                          comment.user.name,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.dark,
+                          ),
+                        ),
                         if (comment.user.isRT) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text('RT', style: TextStyle(
-                              fontSize: 9, fontWeight: FontWeight.w600, color: AppColors.primary,
-                            )),
+                            child: const Text(
+                              'RT',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
                           ),
                         ],
                       ],
                     ),
                     Text(
                       _formatTime(comment.createdAt),
-                      style: const TextStyle(fontSize: 11, color: AppColors.grey),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -712,9 +802,10 @@ class _CommentTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(comment.comment, style: const TextStyle(
-            fontSize: 13, color: AppColors.dark,
-          )),
+          Text(
+            comment.comment,
+            style: const TextStyle(fontSize: 13, color: AppColors.dark),
+          ),
         ],
       ),
     );
@@ -732,7 +823,12 @@ class _CommentTile extends StatelessWidget {
 }
 
 class _AttachmentTile extends StatelessWidget {
-  const _AttachmentTile({required this.a, required this.isRT, required this.complaintId, required this.onDelete});
+  const _AttachmentTile({
+    required this.a,
+    required this.isRT,
+    required this.complaintId,
+    required this.onDelete,
+  });
 
   final ComplaintAttachment a;
   final bool isRT;
@@ -780,16 +876,32 @@ class _AttachmentTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(a.fileName, style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.dark,
-                      ), overflow: TextOverflow.ellipsis),
-                      Text(a.fileSizeLabel, style: const TextStyle(fontSize: 11, color: AppColors.grey)),
+                      Text(
+                        a.fileName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.dark,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        a.fileSizeLabel,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.grey,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 if (isRT)
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -802,7 +914,9 @@ class _AttachmentTile extends StatelessWidget {
                               child: const Text('Batal'),
                             ),
                             ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.error,
+                              ),
                               onPressed: () {
                                 Navigator.of(dialogCtx).pop();
                                 onDelete();
