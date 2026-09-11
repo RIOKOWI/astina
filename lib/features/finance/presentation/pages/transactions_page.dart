@@ -15,6 +15,7 @@ class TransactionsPage extends ConsumerStatefulWidget {
 
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   String? _typeFilter;
+  String? _categoryFilter;
   DateTimeRange? _dateRange;
 
   @override
@@ -27,6 +28,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       .read(transactionListProvider.notifier)
       .load(
         type: _typeFilter,
+        category: _categoryFilter,
         dateFrom: _dateRange?.start.toIso8601String().split('T').first,
         dateTo: _dateRange?.end.toIso8601String().split('T').first,
       );
@@ -51,10 +53,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       ),
       body: Column(
         children: [
-          if (_typeFilter != null || _dateRange != null)
+          if (_typeFilter != null ||
+              _categoryFilter != null ||
+              _dateRange != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   if (_typeFilter != null)
                     Chip(
@@ -66,8 +72,15 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                         _load();
                       },
                     ),
-                  if (_dateRange != null) ...[
-                    const SizedBox(width: 8),
+                  if (_categoryFilter != null)
+                    Chip(
+                      label: Text(_categoryFilter!),
+                      onDeleted: () {
+                        setState(() => _categoryFilter = null);
+                        _load();
+                      },
+                    ),
+                  if (_dateRange != null)
                     Chip(
                       label: Text(
                         '${_dateRange!.start.day}/${_dateRange!.start.month} - ${_dateRange!.end.day}/${_dateRange!.end.month}',
@@ -77,14 +90,15 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                         _load();
                       },
                     ),
-                  ],
                 ],
               ),
             ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => _load(),
-              child: state.transactions.isEmpty && !state.isLoading
+              child: state.error != null
+                  ? _buildError(state.error!)
+                  : state.transactions.isEmpty && !state.isLoading
                   ? _buildEmpty()
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -102,6 +116,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                               .read(transactionListProvider.notifier)
                               .loadMore(
                                 type: _typeFilter,
+                                category: _categoryFilter,
                                 dateFrom: _dateRange?.start
                                     .toIso8601String()
                                     .split('T')
@@ -156,99 +171,180 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     );
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet(
+  Widget _buildError(String message) {
+    return ListView(
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Center(
+          child: Column(
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              const SizedBox(height: 16),
+              const Text(
+                'Gagal memuat transaksi',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: AppColors.grey),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _load, child: const Text('Coba Lagi')),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showFilterSheet() async {
+    String? selectedType = _typeFilter;
+    DateTimeRange? selectedRange = _dateRange;
+    final categoryController = TextEditingController(
+      text: _categoryFilter ?? '',
+    );
+
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Filter',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Tipe',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.viewInsetsOf(sheetContext).bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ChoiceChip(
-                  label: const Text('Semua'),
-                  selected: _typeFilter == null,
-                  onSelected: (_) => setState(() => _typeFilter = null),
+                const Text(
+                  'Filter',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
-                ChoiceChip(
-                  label: const Text('Pemasukan'),
-                  selected: _typeFilter == 'income',
-                  onSelected: (_) => setState(() => _typeFilter = 'income'),
+                const SizedBox(height: 16),
+                const Text(
+                  'Tipe',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
-                ChoiceChip(
-                  label: const Text('Pengeluaran'),
-                  selected: _typeFilter == 'expense',
-                  onSelected: (_) => setState(() => _typeFilter = 'expense'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('Semua'),
+                      selected: selectedType == null,
+                      onSelected: (_) =>
+                          setSheetState(() => selectedType = null),
+                    ),
+                    ChoiceChip(
+                      label: const Text('Pemasukan'),
+                      selected: selectedType == 'income',
+                      onSelected: (_) =>
+                          setSheetState(() => selectedType = 'income'),
+                    ),
+                    ChoiceChip(
+                      label: const Text('Pengeluaran'),
+                      selected: selectedType == 'expense',
+                      onSelected: (_) =>
+                          setSheetState(() => selectedType = 'expense'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: categoryController,
+                  maxLength: 100,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategori',
+                    hintText: 'Contoh: operasional',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.category_outlined),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Tanggal',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final range = await showDateRangePicker(
+                            context: sheetContext,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now(),
+                            initialDateRange: selectedRange,
+                          );
+                          if (range != null) {
+                            setSheetState(() => selectedRange = range);
+                          }
+                        },
+                        icon: const Icon(Icons.date_range),
+                        label: Text(
+                          selectedRange == null
+                              ? 'Pilih Tanggal'
+                              : '${selectedRange!.start.day}/${selectedRange!.start.month} - ${selectedRange!.end.day}/${selectedRange!.end.month}',
+                        ),
+                      ),
+                    ),
+                    if (selectedRange != null)
+                      IconButton(
+                        onPressed: () =>
+                            setSheetState(() => selectedRange = null),
+                        icon: const Icon(Icons.close),
+                        tooltip: 'Hapus tanggal',
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final category = categoryController.text.trim();
+                      setState(() {
+                        _typeFilter = selectedType;
+                        _categoryFilter = category.isEmpty ? null : category;
+                        _dateRange = selectedRange;
+                      });
+                      Navigator.pop(sheetContext);
+                      _load();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Terapkan',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Tanggal',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () async {
-                final range = await showDateRangePicker(
-                  context: ctx,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                  initialDateRange: _dateRange,
-                );
-                if (range != null) {
-                  setState(() => _dateRange = range);
-                }
-              },
-              icon: const Icon(Icons.date_range),
-              label: Text(
-                _dateRange == null
-                    ? 'Pilih Tanggal'
-                    : '${_dateRange!.start.day}/${_dateRange!.start.month} - ${_dateRange!.end.day}/${_dateRange!.end.month}',
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _load();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'Terapkan',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
+    categoryController.dispose();
   }
 }
 
