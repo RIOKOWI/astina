@@ -11,9 +11,12 @@ import '../../features/finance/presentation/pages/transactions_page.dart';
 import '../../features/finance/presentation/pages/transaction_form_page.dart';
 import '../../features/finance/presentation/pages/pending_payments_page.dart';
 import '../../features/finance/presentation/pages/dues_page.dart';
+import '../../features/finance/presentation/pages/due_detail_page.dart';
 import '../../features/finance/presentation/pages/my_due_bills_page.dart';
 import '../../features/finance/presentation/pages/my_payments_page.dart';
 import '../../features/finance/presentation/pages/payment_form_page.dart';
+import '../../features/finance/presentation/pages/payment_detail_page.dart';
+import '../../features/finance/data/datasources/finance_remote_data_source.dart';
 import '../../features/sos/presentation/pages/sos_page.dart';
 import '../../features/residents/presentation/pages/my_household_page.dart';
 import '../../features/residents/presentation/pages/my_resident_page.dart';
@@ -52,6 +55,7 @@ final _restrictedRoutes = {
   '/users': [UserRole.rt],
   '/activities/create': [UserRole.rt],
   '/inventory': [UserRole.rt],
+  '/finance/transactions/create': [UserRole.rt, UserRole.bendahara],
   '/finance/dues': [UserRole.rt],
   '/finance/payments/pending': [UserRole.bendahara],
   '/complaints/create': [UserRole.warga],
@@ -243,9 +247,21 @@ final appRouter = GoRouter(
       builder: (context, state) => const PendingPaymentsPage(),
     ),
     GoRoute(
+      path: '/finance/payments/:id',
+      name: 'finance-payment-detail',
+      builder: (context, state) =>
+          PaymentDetailPage(paymentId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
       path: '/finance/dues',
       name: 'finance-dues',
       builder: (context, state) => const DuesPage(),
+    ),
+    GoRoute(
+      path: '/finance/dues/:id',
+      name: 'finance-due-detail',
+      builder: (context, state) =>
+          DueDetailPage(dueId: int.parse(state.pathParameters['id']!)),
     ),
     GoRoute(
       path: '/finance/my/bills',
@@ -256,8 +272,8 @@ final appRouter = GoRouter(
       path: '/finance/my/bills/:id/pay',
       name: 'my-payment-form',
       builder: (context, state) {
-        final bill = state.extra;
-        return PaymentFormPage(bill: bill as dynamic);
+        final bill = state.extra as DueBillModel;
+        return PaymentFormPage(bill: bill);
       },
     ),
     GoRoute(
