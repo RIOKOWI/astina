@@ -22,7 +22,6 @@ class _AstinaAppState extends ConsumerState<AstinaApp> {
 
   Future<void> _initFcm() async {
     initFcmListeners();
-    // Handle notification that opened the app (cold start)
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null && mounted) {
       final route = FCMService.instance.extractRoute(initialMessage);
@@ -32,7 +31,6 @@ class _AstinaAppState extends ConsumerState<AstinaApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch FCM messages for deep linking (foreground)
     ref.listen(fcmMessageProvider, (prev, next) {
       next.whenData((message) {
         if (message != null) {
@@ -43,10 +41,11 @@ class _AstinaAppState extends ConsumerState<AstinaApp> {
     });
 
     return MaterialApp.router(
-      title: 'ASTINA',
+      title: 'Astina Smart Mobile',
       theme: AppTheme.light,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
     );
   }
 }
+
