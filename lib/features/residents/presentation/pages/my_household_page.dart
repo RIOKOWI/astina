@@ -320,10 +320,7 @@ class _MyHouseholdPageState extends ConsumerState<MyHouseholdPage> {
             const Icon(Icons.error_outline, color: AppColors.error),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                msg,
-                style: const TextStyle(color: AppColors.error),
-              ),
+              child: Text(msg, style: const TextStyle(color: AppColors.error)),
             ),
           ],
         ),
