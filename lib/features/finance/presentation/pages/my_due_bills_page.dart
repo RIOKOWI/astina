@@ -133,6 +133,7 @@ class _DueBillCard extends StatelessWidget {
     final statusColor = switch (bill.status) {
       'pending' => Colors.orange,
       'approved' => AppColors.success,
+      'paid' => AppColors.success,
       'rejected' => AppColors.error,
       _ => AppColors.grey,
     };
@@ -208,15 +209,18 @@ class _DueBillCard extends StatelessWidget {
               ),
               const Spacer(),
               if (bill.isUnpaid)
-                ElevatedButton.icon(
-                  onPressed: onPay,
-                  icon: const Icon(Icons.payment, size: 18),
-                  label: const Text('Bayar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                SizedBox(
+                  width: 110,
+                  child: ElevatedButton.icon(
+                    onPressed: onPay,
+                    icon: const Icon(Icons.payment, size: 18),
+                    label: const Text('Bayar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
