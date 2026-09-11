@@ -5,10 +5,7 @@ class AssetCreatedBy {
   final String name;
 
   factory AssetCreatedBy.fromJson(Map<String, dynamic> json) {
-    return AssetCreatedBy(
-      id: json['id'] as int,
-      name: json['name'] as String,
-    );
+    return AssetCreatedBy(id: json['id'] as int, name: json['name'] as String);
   }
 }
 
