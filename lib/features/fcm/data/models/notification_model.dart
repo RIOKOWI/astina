@@ -77,7 +77,8 @@ class AppNotification {
       case 'payment_submitted':
       case 'payment_approved':
       case 'payment_rejected':
-        return '/finance/payments';
+        final id = paymentId;
+        return id != null ? '/finance/payments/$id' : '/finance';
       case 'complaint_created':
       case 'complaint_updated':
         final id = complaintId;
