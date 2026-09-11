@@ -4,7 +4,9 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/dio_client.dart';
 import '../models/household_model.dart';
 
-final _dsLog = Logger(printer: PrettyPrinter(methodCount: 0, errorMethodCount: 0));
+final _dsLog = Logger(
+  printer: PrettyPrinter(methodCount: 0, errorMethodCount: 0),
+);
 
 class MeHouseholdDataSource {
   MeHouseholdDataSource(this._client);
@@ -20,7 +22,11 @@ class MeHouseholdDataSource {
       return HouseholdModel.fromJson(householdData);
     } catch (e, st) {
       if (kDebugMode) {
-        _dsLog.e('[MeHouseholdDataSource] getMyHousehold failed', error: e, stackTrace: st);
+        _dsLog.e(
+          '[MeHouseholdDataSource] getMyHousehold failed',
+          error: e,
+          stackTrace: st,
+        );
       }
       rethrow;
     }
