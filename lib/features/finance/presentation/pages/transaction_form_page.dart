@@ -83,13 +83,16 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
               ),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Jumlah wajib diisi';
-                if (int.tryParse(v) == null) return 'Masukkan angka yang valid';
+                final amount = int.tryParse(v);
+                if (amount == null) return 'Masukkan angka yang valid';
+                if (amount < 100) return 'Jumlah minimal Rp 100';
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _categoryController,
+              maxLength: 100,
               decoration: InputDecoration(
                 labelText: 'Kategori',
                 hintText: 'Contoh: Operasional',
@@ -118,6 +121,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
+              maxLength: 500,
               maxLines: 2,
               decoration: InputDecoration(
                 labelText: 'Keterangan (opsional)',
