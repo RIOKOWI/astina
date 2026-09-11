@@ -62,25 +62,38 @@ class _MovementFormPageState extends ConsumerState<MovementFormPage> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Tipe Pergerakan',
-                style:
-                    TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            const Text(
+              'Tipe Pergerakan',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: _typeCard('in', 'Masuk', Icons.arrow_downward,
-                      AppColors.primary),
+                  child: _typeCard(
+                    'in',
+                    'Masuk',
+                    Icons.arrow_downward,
+                    AppColors.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _typeCard(
-                      'out', 'Keluar', Icons.arrow_upward, AppColors.dark),
+                    'out',
+                    'Keluar',
+                    Icons.arrow_upward,
+                    AppColors.dark,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _typeCard('adjustment', 'Penyesuaian',
-                      Icons.swap_vert, Colors.orange),
+                  child: _typeCard(
+                    'adjustment',
+                    'Penyesuaian',
+                    Icons.swap_vert,
+                    Colors.orange,
+                  ),
                 ),
               ],
             ),
@@ -94,8 +107,10 @@ class _MovementFormPageState extends ConsumerState<MovementFormPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Jumlah wajib diisi';
@@ -113,8 +128,10 @@ class _MovementFormPageState extends ConsumerState<MovementFormPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -124,17 +141,19 @@ class _MovementFormPageState extends ConsumerState<MovementFormPage> {
                 backgroundColor: AppColors.primary,
                 minimumSize: const Size.fromHeight(52),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: _isSubmitting
                   ? const SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
-                  : const Text('Simpan',
-                      style: TextStyle(color: Colors.white)),
+                  : const Text('Simpan', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -142,8 +161,7 @@ class _MovementFormPageState extends ConsumerState<MovementFormPage> {
     );
   }
 
-  Widget _typeCard(
-      String type, String label, IconData icon, Color color) {
+  Widget _typeCard(String type, String label, IconData icon, Color color) {
     final isSelected = _type == type;
     return GestureDetector(
       onTap: () => setState(() => _type = type),
@@ -212,7 +230,10 @@ class _MovementFormPageState extends ConsumerState<MovementFormPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Gagal: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
         setState(() => _isSubmitting = false);
       }
