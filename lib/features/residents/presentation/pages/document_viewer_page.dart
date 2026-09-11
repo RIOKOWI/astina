@@ -24,18 +24,29 @@ class _DocumentViewerPageState extends State<DocumentViewerPage> {
   bool _isLoading = true;
   String? _localPath;
   String? _error;
+  List<int>? _cachedBytes;
+
+  // Sanitized filename (no slashes/spaces) used for temp file
+  late final String _safeFileName;
 
   @override
   void initState() {
     super.initState();
+    _safeFileName = widget.fileName
+        .replaceAll('/', '_')
+        .replaceAll('\\', '_')
+        .replaceAll(' ', '_');
     Future.microtask(_downloadFile);
   }
 
   Future<void> _downloadFile() async {
     try {
       final bytes = await widget.fetchBytes();
+      _cachedBytes = bytes;
       final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/${widget.fileName}');
+      // Sanitize fileName: backend may return paths like "SKU/RT05/202609/000001.docx"
+      // which would be treated as subdirectories. Replace slashes and spaces with underscores.
+      final file = File('${tempDir.path}/$_safeFileName');
       await file.writeAsBytes(bytes);
       if (mounted) {
         setState(() {
@@ -53,6 +64,47 @@ class _DocumentViewerPageState extends State<DocumentViewerPage> {
     }
   }
 
+  Future<void> _downloadToFolder() async {
+    final bytes = _cachedBytes;
+    if (bytes == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final downloadDir = Directory('/storage/emulated/0/Download');
+      final String destPath;
+      if (await downloadDir.exists()) {
+        destPath = '${downloadDir.path}/astina_$_safeFileName';
+      } else {
+        final extStore = await getExternalStorageDirectory();
+        final fallbackDir = Directory('${extStore?.path}/Download');
+        if (!await fallbackDir.exists()) {
+          await fallbackDir.create(recursive: true);
+        }
+        destPath = '${fallbackDir.path}/astina_$_safeFileName';
+      }
+      await File(destPath).writeAsBytes(bytes);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tersimpan di $destPath'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengunduh: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,6 +113,14 @@ class _DocumentViewerPageState extends State<DocumentViewerPage> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         title: Text(widget.title, style: const TextStyle(fontSize: 14)),
+        actions: [
+          if (!_isLoading && _error == null && _cachedBytes != null)
+            IconButton(
+              icon: const Icon(Icons.download),
+              tooltip: 'Unduh ke folder Download',
+              onPressed: _downloadToFolder,
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(
