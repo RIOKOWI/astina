@@ -6,13 +6,26 @@ import '../../../../core/widgets/app_drawer.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
 
-class FinancePage extends ConsumerWidget {
+class FinancePage extends ConsumerStatefulWidget {
   const FinancePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FinancePage> createState() => _FinancePageState();
+}
+
+class _FinancePageState extends ConsumerState<FinancePage> {
+  DateTime? _selectedMonth;
+
+  String? get _monthParam {
+    final selected = _selectedMonth;
+    if (selected == null) return null;
+    return '${selected.year}-${selected.month.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final role = ref.watch(currentUserRoleProvider);
-    final summaryAsync = ref.watch(financeSummaryProvider(null));
+    final summaryAsync = ref.watch(financeSummaryProvider(_monthParam));
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -20,10 +33,17 @@ class FinancePage extends ConsumerWidget {
         title: const Text('Kas RT'),
         backgroundColor: AppColors.dark,
         foregroundColor: AppColors.white,
+        actions: [
+          IconButton(
+            onPressed: _showMonthDialog,
+            icon: const Icon(Icons.calendar_month_outlined),
+            tooltip: 'Pilih bulan ringkasan',
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(financeSummaryProvider(null));
+          ref.invalidate(financeSummaryProvider(_monthParam));
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -31,6 +51,33 @@ class FinancePage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_selectedMonth != null) ...[
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.event_outlined,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Ringkasan ${_monthName(_selectedMonth!.month)} ${_selectedMonth!.year}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => _selectedMonth = null),
+                      icon: const Icon(Icons.close, size: 18),
+                      tooltip: 'Tampilkan semua periode',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
               summaryAsync.when(
                 data: (summary) => _buildSummaryCard(summary),
                 loading: () => const _SummarySkeleton(),
@@ -48,6 +95,98 @@ class FinancePage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _showMonthDialog() async {
+    final now = DateTime.now();
+    int year = _selectedMonth?.year ?? now.year;
+    int month = _selectedMonth?.month ?? now.month;
+
+    final selected = await showDialog<DateTime>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Periode Ringkasan'),
+          content: Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  initialValue: month,
+                  decoration: const InputDecoration(labelText: 'Bulan'),
+                  items: List.generate(12, (index) => index + 1)
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(_monthName(value)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => month = value);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  initialValue: year,
+                  decoration: const InputDecoration(labelText: 'Tahun'),
+                  items: List.generate(now.year - 2019, (index) => 2020 + index)
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text('$value'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => year = value);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, DateTime(year, month)),
+              child: const Text('Terapkan'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (selected != null && mounted) {
+      setState(() => _selectedMonth = selected);
+    }
+  }
+
+  String _monthName(int month) {
+    const names = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    return names[month];
   }
 
   Widget _buildSummaryCard(dynamic summary) {
