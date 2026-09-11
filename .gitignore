@@ -47,5 +47,6 @@ app.*.map.json
 .vscode/templates
 docs
 CLAUDE.md
+graphify-out
 .gitignore
 .env
