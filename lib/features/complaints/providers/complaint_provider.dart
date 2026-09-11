@@ -64,7 +64,11 @@ class ComplaintsListNotifier extends Notifier<ComplaintsListState> {
     }
   }
 
-  Future<void> loadMore({String? search, String? status, String? category}) async {
+  Future<void> loadMore({
+    String? search,
+    String? status,
+    String? category,
+  }) async {
     if (state.isLoading || !state.hasMore) return;
     state = state.copyWith(isLoading: true);
     try {
@@ -90,22 +94,18 @@ class ComplaintsListNotifier extends Notifier<ComplaintsListState> {
 
 final complaintsListProvider =
     NotifierProvider<ComplaintsListNotifier, ComplaintsListState>(
-  ComplaintsListNotifier.new,
-);
+      ComplaintsListNotifier.new,
+    );
 
-final complaintDetailProvider = FutureProvider.autoDispose.family<Complaint, int>(
-  (ref, id) async {
-    final ds = ref.watch(complaintDataSourceProvider);
-    return ds.getComplaint(id);
-  },
-);
+final complaintDetailProvider = FutureProvider.autoDispose
+    .family<Complaint, int>((ref, id) async {
+      final ds = ref.watch(complaintDataSourceProvider);
+      return ds.getComplaint(id);
+    });
 
 // Comment input state
 class CommentInputState {
-  const CommentInputState({
-    this.isSubmitting = false,
-    this.error,
-  });
+  const CommentInputState({this.isSubmitting = false, this.error});
   final bool isSubmitting;
   final String? error;
 }
@@ -133,5 +133,5 @@ class CommentInputNotifier extends Notifier<CommentInputState> {
 
 final commentInputProvider =
     NotifierProvider<CommentInputNotifier, CommentInputState>(
-  CommentInputNotifier.new,
-);
+      CommentInputNotifier.new,
+    );
