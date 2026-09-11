@@ -77,7 +77,10 @@ class ComplaintDataSource {
     return Complaint.fromJson(data['data'] as Map<String, dynamic>);
   }
 
-  Future<ComplaintAttachment> uploadAttachment(int complaintId, File file) async {
+  Future<ComplaintAttachment> uploadAttachment(
+    int complaintId,
+    File file,
+  ) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(file.path),
     });
