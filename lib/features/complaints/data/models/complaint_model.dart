@@ -62,11 +62,7 @@ class ComplaintComment {
 }
 
 class CommentUser {
-  const CommentUser({
-    required this.id,
-    required this.name,
-    required this.role,
-  });
+  const CommentUser({required this.id, required this.name, required this.role});
 
   final int id;
   final String name;
@@ -104,10 +100,7 @@ class AssignedTo {
   final String name;
 
   factory AssignedTo.fromJson(Map<String, dynamic> json) {
-    return AssignedTo(
-      id: json['id'] as int,
-      name: json['name'] as String,
-    );
+    return AssignedTo(id: json['id'] as int, name: json['name'] as String);
   }
 }
 
