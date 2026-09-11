@@ -34,18 +34,21 @@ class PaymentModel {
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
+    final residentJson = json['resident'];
+    final resident = residentJson is Map
+        ? Resident.fromJson(Map<String, dynamic>.from(residentJson))
+        : null;
+
     return PaymentModel(
       id: json['id'] as int,
       dueBillId: json['due_bill_id'] as int,
       dueBill: json['due_bill'] != null
           ? DueBill.fromJson(json['due_bill'] as Map<String, dynamic>)
           : null,
-      residentId: json['resident_id'] as int,
-      resident: json['resident'] != null
-          ? Resident.fromJson(json['resident'] as Map<String, dynamic>)
-          : null,
+      residentId: json['resident_id'] as int? ?? resident?.id ?? 0,
+      resident: resident,
       amount: json['amount'] as int,
-      method: json['method'] as String,
+      method: json['method'] as String? ?? '-',
       status: json['status'] as String,
       paidAt: json['paid_at'] != null
           ? DateTime.parse(json['paid_at'] as String)
@@ -74,7 +77,7 @@ class PaymentModel {
 
 class DueBill {
   final int id;
-  final int dueId;
+  final int? dueId;
   final DueInfo? due;
   final int amount;
   final String dueDate;
@@ -82,7 +85,7 @@ class DueBill {
 
   const DueBill({
     required this.id,
-    required this.dueId,
+    this.dueId,
     this.due,
     required this.amount,
     required this.dueDate,
@@ -90,12 +93,15 @@ class DueBill {
   });
 
   factory DueBill.fromJson(Map<String, dynamic> json) {
+    final dueJson = json['due'];
+    final due = dueJson is Map
+        ? DueInfo.fromJson(Map<String, dynamic>.from(dueJson))
+        : null;
+
     return DueBill(
       id: json['id'] as int,
-      dueId: json['due_id'] as int,
-      due: json['due'] != null
-          ? DueInfo.fromJson(json['due'] as Map<String, dynamic>)
-          : null,
+      dueId: json['due_id'] as int? ?? due?.id,
+      due: due,
       amount: json['amount'] as int,
       dueDate: json['due_date'] as String,
       status: json['status'] as String,
@@ -131,14 +137,14 @@ class DueInfo {
 
 class Resident {
   final int id;
-  final String fullName;
+  final String? fullName;
 
-  const Resident({required this.id, required this.fullName});
+  const Resident({required this.id, this.fullName});
 
   factory Resident.fromJson(Map<String, dynamic> json) {
     return Resident(
       id: json['id'] as int,
-      fullName: json['full_name'] as String,
+      fullName: json['full_name'] as String?,
     );
   }
 }
@@ -160,7 +166,7 @@ class PaymentProof {
   final String url;
   final String fileName;
   final String mimeType;
-  final int fileSize;
+  final int? fileSize;
   final DateTime createdAt;
 
   const PaymentProof({
@@ -180,7 +186,7 @@ class PaymentProof {
       url: json['url'] as String,
       fileName: json['file_name'] as String,
       mimeType: json['mime_type'] as String,
-      fileSize: json['file_size'] as int,
+      fileSize: json['file_size'] as int?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
