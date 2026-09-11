@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../data/models/payment_model.dart';
 import '../../providers/finance_provider.dart';
 
 class PendingPaymentsPage extends ConsumerStatefulWidget {
@@ -13,6 +15,8 @@ class PendingPaymentsPage extends ConsumerStatefulWidget {
 }
 
 class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
+  bool _isProcessing = false;
+
   @override
   void initState() {
     super.initState();
@@ -34,7 +38,9 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async => _load(),
-        child: state.payments.isEmpty && !state.isLoading
+        child: state.error != null
+            ? _buildError(state.error!)
+            : state.payments.isEmpty && !state.isLoading
             ? _buildEmpty()
             : ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -52,12 +58,50 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
                   }
                   return _PaymentCard(
                     payment: state.payments[index],
+                    isProcessing: _isProcessing,
+                    onOpen: () async {
+                      await context.push(
+                        '/finance/payments/${state.payments[index].id}',
+                      );
+                      if (mounted) _load();
+                    },
                     onApprove: () => _approve(state.payments[index].id),
                     onReject: () => _showRejectDialog(state.payments[index].id),
                   );
                 },
               ),
       ),
+    );
+  }
+
+  Widget _buildError(String msg) {
+    return ListView(
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Center(
+          child: Column(
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              const SizedBox(height: 16),
+              const Text(
+                'Gagal memuat pembayaran',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  msg,
+                  style: const TextStyle(fontSize: 12, color: AppColors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _load, child: const Text('Coba Lagi')),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -82,6 +126,8 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
   }
 
   Future<void> _approve(int paymentId) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
     try {
       await ref.read(financeRemoteDataSourceProvider).approvePayment(paymentId);
       ref.read(pendingPaymentsProvider.notifier).removePayment(paymentId);
@@ -103,6 +149,8 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
@@ -141,6 +189,8 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
   }
 
   Future<void> _reject(int paymentId, String reason) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
     try {
       await ref
           .read(financeRemoteDataSourceProvider)
@@ -163,6 +213,8 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 }
@@ -170,11 +222,15 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
 class _PaymentCard extends StatelessWidget {
   const _PaymentCard({
     required this.payment,
+    required this.isProcessing,
+    required this.onOpen,
     required this.onApprove,
     required this.onReject,
   });
 
-  final dynamic payment;
+  final PaymentModel payment;
+  final bool isProcessing;
+  final VoidCallback onOpen;
   final VoidCallback onApprove;
   final VoidCallback onReject;
 
@@ -242,18 +298,22 @@ class _PaymentCard extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
+              IconButton(
+                onPressed: onOpen,
+                icon: const Icon(Icons.chevron_right),
+                tooltip: 'Lihat detail',
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _infoChip(Icons.calendar_today, _formatDate(payment.paidAt)),
-              const SizedBox(width: 8),
               _infoChip(Icons.payment, _methodLabel(payment.method)),
-              if (payment.proofs.isNotEmpty) ...[
-                const SizedBox(width: 8),
+              if (payment.proofs.isNotEmpty)
                 _infoChip(Icons.attachment, '${payment.proofs.length} bukti'),
-              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -261,7 +321,7 @@ class _PaymentCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: onReject,
+                  onPressed: isProcessing ? null : onReject,
                   icon: const Icon(Icons.close, size: 18),
                   label: const Text('Tolak'),
                   style: OutlinedButton.styleFrom(
@@ -276,7 +336,7 @@ class _PaymentCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: onApprove,
+                  onPressed: isProcessing ? null : onApprove,
                   icon: const Icon(Icons.check, size: 18),
                   label: const Text('Setuju'),
                   style: ElevatedButton.styleFrom(
@@ -337,6 +397,8 @@ class _PaymentCard extends StatelessWidget {
         return 'Tunai';
       case 'qris':
         return 'QRIS';
+      case 'ewallet':
+        return 'E-Wallet';
       default:
         return method;
     }
