@@ -9,7 +9,8 @@ class ComplaintCreatePage extends ConsumerStatefulWidget {
   const ComplaintCreatePage({super.key});
 
   @override
-  ConsumerState<ComplaintCreatePage> createState() => _ComplaintCreatePageState();
+  ConsumerState<ComplaintCreatePage> createState() =>
+      _ComplaintCreatePageState();
 }
 
 class _ComplaintCreatePageState extends ConsumerState<ComplaintCreatePage> {
@@ -49,11 +50,13 @@ class _ComplaintCreatePageState extends ConsumerState<ComplaintCreatePage> {
     });
 
     try {
-      await ref.read(complaintDataSourceProvider).createComplaint(
-        title: _titleController.text.trim(),
-        description: _descController.text.trim(),
-        category: _category!,
-      );
+      await ref
+          .read(complaintDataSourceProvider)
+          .createComplaint(
+            title: _titleController.text.trim(),
+            description: _descController.text.trim(),
+            category: _category!,
+          );
       ref.read(complaintsListProvider.notifier).load();
       if (mounted) {
         context.go('/complaints');
@@ -94,7 +97,10 @@ class _ComplaintCreatePageState extends ConsumerState<ComplaintCreatePage> {
                     color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(_errorMsg!, style: const TextStyle(color: AppColors.error)),
+                  child: Text(
+                    _errorMsg!,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -102,9 +108,8 @@ class _ComplaintCreatePageState extends ConsumerState<ComplaintCreatePage> {
                 TextFormField(
                   controller: _titleController,
                   decoration: const InputDecoration(labelText: 'Judul *'),
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Wajib diisi'
-                      : null,
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -117,10 +122,7 @@ class _ComplaintCreatePageState extends ConsumerState<ComplaintCreatePage> {
                   value: _category,
                   decoration: const InputDecoration(labelText: 'Kategori *'),
                   items: _categories.map((c) {
-                    return DropdownMenuItem(
-                      value: c.$1,
-                      child: Text(c.$2),
-                    );
+                    return DropdownMenuItem(value: c.$1, child: Text(c.$2));
                   }).toList(),
                   onChanged: (v) => setState(() => _category = v),
                   validator: (v) => v == null ? 'Wajib dipilih' : null,
