@@ -25,6 +25,7 @@ class TransactionListState {
     this.isLoading = false,
     this.hasMore = true,
     this.currentPage = 1,
+    this.total = 0,
     this.error,
   });
 
@@ -32,6 +33,7 @@ class TransactionListState {
   final bool isLoading;
   final bool hasMore;
   final int currentPage;
+  final int total;
   final String? error;
 
   TransactionListState copyWith({
@@ -39,6 +41,7 @@ class TransactionListState {
     bool? isLoading,
     bool? hasMore,
     int? currentPage,
+    int? total,
     String? error,
   }) {
     return TransactionListState(
@@ -46,6 +49,7 @@ class TransactionListState {
       isLoading: isLoading ?? this.isLoading,
       hasMore: hasMore ?? this.hasMore,
       currentPage: currentPage ?? this.currentPage,
+      total: total ?? this.total,
       error: error,
     );
   }
@@ -55,12 +59,18 @@ class TransactionListNotifier extends Notifier<TransactionListState> {
   @override
   TransactionListState build() => const TransactionListState();
 
-  Future<void> load({String? type, String? dateFrom, String? dateTo}) async {
+  Future<void> load({
+    String? type,
+    String? category,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final ds = ref.read(financeRemoteDataSourceProvider);
       final (list, meta) = await ds.getTransactions(
         type: type,
+        category: category,
         dateFrom: dateFrom,
         dateTo: dateTo,
         page: 1,
@@ -70,6 +80,7 @@ class TransactionListNotifier extends Notifier<TransactionListState> {
         isLoading: false,
         hasMore: (meta['last_page'] as int? ?? 1) > 1,
         currentPage: 1,
+        total: meta['total'] as int? ?? list.length,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -78,6 +89,7 @@ class TransactionListNotifier extends Notifier<TransactionListState> {
 
   Future<void> loadMore({
     String? type,
+    String? category,
     String? dateFrom,
     String? dateTo,
   }) async {
@@ -88,6 +100,7 @@ class TransactionListNotifier extends Notifier<TransactionListState> {
       final nextPage = state.currentPage + 1;
       final (list, meta) = await ds.getTransactions(
         type: type,
+        category: category,
         dateFrom: dateFrom,
         dateTo: dateTo,
         page: nextPage,
@@ -97,6 +110,7 @@ class TransactionListNotifier extends Notifier<TransactionListState> {
         isLoading: false,
         hasMore: (meta['last_page'] as int? ?? 1) > nextPage,
         currentPage: nextPage,
+        total: meta['total'] as int? ?? state.total,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -274,6 +288,97 @@ final duesListProvider = NotifierProvider<DuesListNotifier, DuesListState>(
   DuesListNotifier.new,
 );
 
+final dueDetailProvider = FutureProvider.autoDispose.family<DueModel, int>((
+  ref,
+  id,
+) async {
+  return ref.watch(financeRemoteDataSourceProvider).getDue(id);
+});
+
+class DueBillsState {
+  const DueBillsState({
+    this.bills = const [],
+    this.isLoading = false,
+    this.hasMore = true,
+    this.currentPage = 1,
+    this.total = 0,
+    this.error,
+  });
+
+  final List<DueBillModel> bills;
+  final bool isLoading;
+  final bool hasMore;
+  final int currentPage;
+  final int total;
+  final String? error;
+
+  DueBillsState copyWith({
+    List<DueBillModel>? bills,
+    bool? isLoading,
+    bool? hasMore,
+    int? currentPage,
+    int? total,
+    String? error,
+  }) {
+    return DueBillsState(
+      bills: bills ?? this.bills,
+      isLoading: isLoading ?? this.isLoading,
+      hasMore: hasMore ?? this.hasMore,
+      currentPage: currentPage ?? this.currentPage,
+      total: total ?? this.total,
+      error: error,
+    );
+  }
+}
+
+class DueBillsNotifier extends FamilyNotifier<DueBillsState, int> {
+  @override
+  DueBillsState build(int arg) => const DueBillsState();
+
+  Future<void> load() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final (list, meta) = await ref
+          .read(financeRemoteDataSourceProvider)
+          .getDueBills(arg, page: 1);
+      state = state.copyWith(
+        bills: list,
+        isLoading: false,
+        hasMore: (meta['last_page'] as int? ?? 1) > 1,
+        currentPage: 1,
+        total: meta['total'] as int? ?? list.length,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || !state.hasMore) return;
+    state = state.copyWith(isLoading: true);
+    try {
+      final nextPage = state.currentPage + 1;
+      final (list, meta) = await ref
+          .read(financeRemoteDataSourceProvider)
+          .getDueBills(arg, page: nextPage);
+      state = state.copyWith(
+        bills: [...state.bills, ...list],
+        isLoading: false,
+        hasMore: (meta['last_page'] as int? ?? 1) > nextPage,
+        currentPage: nextPage,
+        total: meta['total'] as int? ?? state.total,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+}
+
+final dueBillsListProvider =
+    NotifierProvider.family<DueBillsNotifier, DueBillsState, int>(
+      DueBillsNotifier.new,
+    );
+
 // --- Warga: My Due Bills (paginated) ---
 class MyDueBillsState {
   const MyDueBillsState({
@@ -353,9 +458,12 @@ class MyDueBillsNotifier extends Notifier<MyDueBillsState> {
             id: b.id,
             dueId: b.dueId,
             due: b.due,
+            residentId: b.residentId,
+            resident: b.resident,
             amount: b.amount,
             dueDate: b.dueDate,
             status: 'pending',
+            createdAt: b.createdAt,
           );
         }
         return b;
@@ -449,3 +557,8 @@ final myPaymentsProvider =
     NotifierProvider<MyPaymentsNotifier, MyPaymentsState>(
       MyPaymentsNotifier.new,
     );
+
+final paymentDetailProvider = FutureProvider.autoDispose
+    .family<PaymentModel, int>((ref, id) async {
+      return ref.watch(financeRemoteDataSourceProvider).getPayment(id);
+    });
