@@ -90,7 +90,7 @@ class FCMService {
       case 'letter_approved':
       case 'letter_rejected':
       case 'letter_completed':
-        return id != null ? '/letters/$id' : '/letters/my';
+        return id != null ? '/letters/$id' : '/letters';
       case 'payment_submitted':
       case 'payment_approved':
       case 'payment_rejected':
