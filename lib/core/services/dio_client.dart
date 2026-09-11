@@ -105,6 +105,9 @@ class _LoggingInterceptor extends Interceptor {
         '→ HTTP $method ${options.baseUrl}$path$query',
         name: 'DioClient',
       );
+      if (options.data != null) {
+        developer.log('  body: ${options.data}', name: 'DioClient');
+      }
     }
     handler.next(options);
   }
@@ -139,6 +142,9 @@ class _LoggingInterceptor extends Interceptor {
         name: 'DioClient',
         error: err,
       );
+      if (err.response?.data != null) {
+        developer.log('  response: ${err.response?.data}', name: 'DioClient');
+      }
       _requestTime.remove(err.requestOptions);
     }
     handler.next(err);
