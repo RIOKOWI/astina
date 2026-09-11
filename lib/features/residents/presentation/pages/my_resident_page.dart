@@ -285,8 +285,7 @@ class _MyResidentPageState extends ConsumerState<MyResidentPage> {
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
-            validator: (v) =>
-                v == null || v.isEmpty ? 'NIK wajib diisi' : null,
+            validator: (v) => v == null || v.isEmpty ? 'NIK wajib diisi' : null,
           ),
           TextFormField(
             controller: _nameController,
