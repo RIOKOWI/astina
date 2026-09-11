@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,8 @@ class PaymentFormPage extends ConsumerStatefulWidget {
 class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
   String _method = 'transfer';
   String? _proofPath;
+  String? _proofName;
+  int? _createdPaymentId;
   bool _isSubmitting = false;
 
   @override
@@ -89,71 +92,85 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
             ],
           ),
           const SizedBox(height: 24),
-          if (_method == 'transfer' || _method == 'qris') ...[
-            const Text(
-              'Bukti Pembayaran',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: AppColors.dark.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.dark.withValues(alpha: 0.1),
-                  ),
+          const Text(
+            'Bukti Pembayaran',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: _pickProof,
+            child: Container(
+              height: 180,
+              decoration: BoxDecoration(
+                color: AppColors.dark.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.dark.withValues(alpha: 0.1),
                 ),
-                child: _proofPath == null
-                    ? const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_photo_alternate_outlined,
-                            size: 40,
-                            color: AppColors.grey,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Klik untuk upload bukti',
-                            style: TextStyle(color: AppColors.grey),
-                          ),
-                        ],
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.file(File(_proofPath!), fit: BoxFit.cover),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: IconButton(
-                                onPressed: () =>
-                                    setState(() => _proofPath = null),
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
+              ),
+              child: _proofPath == null
+                  ? const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.upload_file_outlined,
+                          size: 40,
+                          color: AppColors.grey,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Pilih bukti pembayaran',
+                          style: TextStyle(color: AppColors.grey),
+                        ),
+                      ],
+                    )
+                  : _isPdf(_proofName)
+                  ? Stack(
+                      children: [
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.picture_as_pdf_outlined,
+                                size: 48,
+                                color: AppColors.error,
+                              ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 48,
                                 ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black54,
+                                child: Text(
+                                  _proofName ?? 'Bukti pembayaran.pdf',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        _removeProofButton(),
+                      ],
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.file(File(_proofPath!), fit: BoxFit.cover),
+                          _removeProofButton(),
+                        ],
                       ),
-              ),
+                    ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Upload bukti transfer (jpg, png, pdf, maks 5MB)',
-              style: TextStyle(fontSize: 12, color: AppColors.grey),
-            ),
-          ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Format JPG, JPEG, PNG, atau PDF. Maksimal 5 MB.',
+            style: TextStyle(fontSize: 12, color: AppColors.grey),
+          ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: _isSubmitting ? null : _submit,
@@ -173,9 +190,11 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
                       color: Colors.white,
                     ),
                   )
-                : const Text(
-                    'Kirim Pembayaran',
-                    style: TextStyle(color: Colors.white),
+                : Text(
+                    _createdPaymentId == null
+                        ? 'Kirim Pembayaran'
+                        : 'Coba Upload Lagi',
+                    style: const TextStyle(color: Colors.white),
                   ),
           ),
         ],
@@ -187,7 +206,9 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
     final isSelected = _method == value;
     final color = AppColors.primary;
     return GestureDetector(
-      onTap: () => setState(() => _method = value),
+      onTap: _createdPaymentId == null
+          ? () => setState(() => _method = value)
+          : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -217,9 +238,28 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
+  Widget _removeProofButton() {
+    return Positioned(
+      top: 8,
+      right: 8,
+      child: IconButton(
+        onPressed: () => setState(() {
+          _proofPath = null;
+          _proofName = null;
+        }),
+        icon: const Icon(Icons.close, color: Colors.white),
+        tooltip: 'Hapus bukti',
+        style: IconButton.styleFrom(backgroundColor: Colors.black54),
+      ),
+    );
+  }
+
+  bool _isPdf(String? fileName) {
+    return fileName?.toLowerCase().endsWith('.pdf') ?? false;
+  }
+
+  Future<void> _pickProof() async {
+    final source = await showModalBottomSheet<_ProofSource>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -232,12 +272,17 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text('Kamera'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              onTap: () => Navigator.pop(ctx, _ProofSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: const Text('Galeri'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              onTap: () => Navigator.pop(ctx, _ProofSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_open_outlined),
+              title: const Text('Pilih File'),
+              onTap: () => Navigator.pop(ctx, _ProofSource.file),
             ),
           ],
         ),
@@ -245,14 +290,51 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
     );
 
     if (source == null) return;
-    final image = await picker.pickImage(source: source, imageQuality: 80);
-    if (image != null) {
-      setState(() => _proofPath = image.path);
+
+    String? path;
+    String? name;
+    int? size;
+    if (source == _ProofSource.file) {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['jpg', 'jpeg', 'png', 'pdf'],
+        allowMultiple: false,
+      );
+      final file = result?.files.single;
+      path = file?.path;
+      name = file?.name;
+      size = file?.size;
+    } else {
+      final image = await ImagePicker().pickImage(
+        source: source == _ProofSource.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+        imageQuality: 80,
+      );
+      path = image?.path;
+      name = image?.name;
     }
+
+    if (path == null || name == null || !mounted) return;
+    size ??= await File(path).length();
+    if (!mounted) return;
+    if (size > 5 * 1024 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ukuran file maksimal 5 MB'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    setState(() {
+      _proofPath = path;
+      _proofName = name;
+    });
   }
 
   Future<void> _submit() async {
-    if (_method != 'cash' && _proofPath == null) {
+    if (_proofPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Silakan upload bukti pembayaran'),
@@ -266,18 +348,22 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
 
     try {
       final ds = ref.read(financeRemoteDataSourceProvider);
-      final payment = await ds.createPayment(
-        dueBillId: widget.bill.id,
-        amount: widget.bill.amount,
-        method: _method,
-      );
-
-      if (_proofPath != null) {
-        await ds.uploadPaymentProof(payment.id, _proofPath!);
+      if (_createdPaymentId == null) {
+        final payment = await ds.createPayment(
+          dueBillId: widget.bill.id,
+          amount: widget.bill.amount,
+          method: _method,
+        );
+        if (mounted) {
+          setState(() => _createdPaymentId = payment.id);
+        } else {
+          _createdPaymentId = payment.id;
+        }
       }
+      await ds.uploadPaymentProof(_createdPaymentId!, _proofPath!);
 
       ref.read(myDueBillsProvider.notifier).markAsPaid(widget.bill.id);
-      ref.read(myPaymentsProvider.notifier).addPayment(payment);
+      ref.invalidate(myPaymentsProvider);
       if (mounted) {
         context.go('/finance');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -311,3 +397,5 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
     return 'Rp $str';
   }
 }
+
+enum _ProofSource { camera, gallery, file }
