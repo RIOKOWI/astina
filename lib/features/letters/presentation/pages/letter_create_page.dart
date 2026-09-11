@@ -136,8 +136,7 @@ class _LetterCreatePageState extends ConsumerState<LetterCreatePage> {
     // Fetch detail to get complete fields (list response does not include fields)
     LetterType detailedType;
     try {
-      detailedType = await ref
-          .read(letterTypeDetailProvider(type.id).future);
+      detailedType = await ref.read(letterTypeDetailProvider(type.id).future);
     } catch (_) {
       detailedType = type;
     }
@@ -350,7 +349,8 @@ class _LetterSubmissionSheetState extends ConsumerState<LetterSubmissionSheet> {
               : null,
         );
       case 'select':
-        final isGenderField = field.fieldKey.contains('jenis_kelamin') ||
+        final isGenderField =
+            field.fieldKey.contains('jenis_kelamin') ||
             field.label.toLowerCase().contains('jenis kelamin');
         final selectItems = isGenderField
             ? ['Laki-Laki', 'Perempuan']
