@@ -350,14 +350,22 @@ class _LetterSubmissionSheetState extends ConsumerState<LetterSubmissionSheet> {
               : null,
         );
       case 'select':
+        final isGenderField = field.fieldKey.contains('jenis_kelamin') ||
+            field.label.toLowerCase().contains('jenis kelamin');
+        final selectItems = isGenderField
+            ? ['Laki-Laki', 'Perempuan']
+            : <String>[];
         return DropdownButtonFormField<String>(
-          initialValue: ctrl.text.isEmpty ? null : ctrl.text,
+          value: ctrl.text.isEmpty ? null : ctrl.text,
           decoration: InputDecoration(
             labelText: '${field.label}${field.isRequired ? ' *' : ''}',
             border: const OutlineInputBorder(),
           ),
-          items: const [
-            DropdownMenuItem(value: '', child: Text('-- Pilih --')),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('-- Pilih --')),
+            ...selectItems.map(
+              (v) => DropdownMenuItem(value: v, child: Text(v)),
+            ),
           ],
           onChanged: (v) => ctrl.text = v ?? '',
           validator: field.isRequired
@@ -387,15 +395,8 @@ class _LetterSubmissionSheetState extends ConsumerState<LetterSubmissionSheet> {
     final fields = <String, dynamic>{};
     for (final entry in _controllers.entries) {
       if (entry.value.text.isNotEmpty) {
-        final field = widget.letterType.fields.firstWhere(
-          (f) => f.fieldKey == entry.key,
-        );
-        if (field.fieldType == 'number') {
-          fields[entry.key] =
-              int.tryParse(entry.value.text) ?? entry.value.text;
-        } else {
-          fields[entry.key] = entry.value.text;
-        }
+        // Always send as String — backend validates all field values as string
+        fields[entry.key] = entry.value.text;
       }
     }
 
