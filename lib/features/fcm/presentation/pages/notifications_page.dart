@@ -17,9 +17,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(notificationsProvider.notifier).load(),
-    );
+    Future.microtask(() => ref.read(notificationsProvider.notifier).load());
   }
 
   @override
@@ -125,10 +123,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({
-    required this.notification,
-    required this.onTap,
-  });
+  const _NotificationTile({required this.notification, required this.onTap});
 
   final AppNotification notification;
   final VoidCallback onTap;
@@ -187,8 +182,7 @@ class _NotificationTile extends StatelessWidget {
       title: Text(
         notification.title,
         style: TextStyle(
-          fontWeight:
-              notification.isRead ? FontWeight.w400 : FontWeight.w600,
+          fontWeight: notification.isRead ? FontWeight.w400 : FontWeight.w600,
           color: AppColors.dark,
         ),
       ),
