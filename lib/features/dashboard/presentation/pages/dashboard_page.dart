@@ -26,7 +26,7 @@ class DashboardPage extends ConsumerWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('ASTINA'),
+          title: const Text('Astina Smart Mobile'),
           leading: Builder(
             builder: (ctx) => IconButton(
               icon: const Icon(Icons.menu),

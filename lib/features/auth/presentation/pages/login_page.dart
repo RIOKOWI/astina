@@ -82,17 +82,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         Container(
           width: 80,
           height: 80,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.30),
-                blurRadius: 28,
-                offset: const Offset(0, 14),
-              ),
-            ],
-          ),
           child: const Center(
             child: Text(
               'A',
@@ -106,7 +95,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
         const SizedBox(height: 16),
         const Text(
-          'ASTINA',
+          'Astina Smart Mobile',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
