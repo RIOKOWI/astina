@@ -1,19 +1,26 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../data/models/admin_resident_model.dart';
 import '../../providers/resident_admin_provider.dart';
 
-class ResidentDetailPage extends ConsumerWidget {
+class ResidentDetailPage extends ConsumerStatefulWidget {
   final int residentId;
 
   const ResidentDetailPage({super.key, required this.residentId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailAsync = ref.watch(residentDetailProvider(residentId));
+  ConsumerState<ResidentDetailPage> createState() => _ResidentDetailPageState();
+}
+
+class _ResidentDetailPageState extends ConsumerState<ResidentDetailPage> {
+  @override
+  Widget build(BuildContext context) {
+    final detailAsync = ref.watch(residentDetailProvider(widget.residentId));
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -24,7 +31,8 @@ class ResidentDetailPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () => context.push('/residents/$residentId/edit'),
+            onPressed: () =>
+                context.push('/residents/${widget.residentId}/edit'),
           ),
         ],
       ),
@@ -45,8 +53,10 @@ class ResidentDetailPage extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref, AdminResident r) {
+    final residentId = widget.residentId;
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(residentDetailProvider(residentId)),
+      onRefresh: () async =>
+          ref.invalidate(residentDetailProvider(widget.residentId)),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20),
@@ -160,8 +170,26 @@ class ResidentDetailPage extends ConsumerWidget {
             ],
             const SizedBox(height: 16),
             _buildInfoCard('Dokumen', [
-              _docRow('KTP', r.ktp),
-              _docRow('KK', r.kk),
+              _docRow(
+                'KTP',
+                r.ktp,
+                context,
+                ref,
+                residentId,
+                () => ref
+                    .read(residentAdminDataSourceProvider)
+                    .downloadKtpFile(residentId),
+              ),
+              _docRow(
+                'KK',
+                r.kk,
+                context,
+                ref,
+                residentId,
+                () => ref
+                    .read(residentAdminDataSourceProvider)
+                    .downloadKkFile(residentId),
+              ),
             ]),
           ],
         ),
@@ -309,7 +337,14 @@ class ResidentDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _docRow(String label, AdminResidentDoc? doc) {
+  Widget _docRow(
+    String label,
+    AdminResidentDoc? doc,
+    BuildContext context,
+    WidgetRef ref,
+    int residentId,
+    Future<List<int>> Function() fetchBytes,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -322,28 +357,60 @@ class ResidentDetailPage extends ConsumerWidget {
             ),
           ),
           if (doc != null && doc.exists)
-            Row(
-              children: [
-                const Icon(
-                  Icons.check_circle,
-                  size: 16,
-                  color: AppColors.success,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  doc.fileName ?? 'Tersedia',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.dark,
+            Expanded(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: AppColors.success,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      doc.fileName ?? 'Tersedia',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.dark,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.visibility, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Preview',
+                    onPressed: () => context.push(
+                      '/_document_viewer',
+                      extra: {
+                        'title': label,
+                        'fetchBytes': fetchBytes,
+                        'fileName': doc.fileName ?? '$label.jpg',
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.download, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Download',
+                    onPressed: () => _downloadToFolder(
+                      label,
+                      fetchBytes,
+                      doc.fileName ?? '$label.jpg',
+                    ),
+                  ),
+                ],
+              ),
             )
           else
-            const Text(
-              'Belum diupload',
-              style: TextStyle(fontSize: 13, color: AppColors.grey),
+            const Expanded(
+              child: Text(
+                'Belum diupload',
+                style: TextStyle(fontSize: 13, color: AppColors.grey),
+              ),
             ),
         ],
       ),
@@ -371,6 +438,43 @@ class ResidentDetailPage extends ConsumerWidget {
       return '${dt.day}/${dt.month}/${dt.year}';
     } catch (_) {
       return iso;
+    }
+  }
+
+  Future<void> _downloadToFolder(
+    String label,
+    Future<List<int>> Function() fetchBytes,
+    String fileName,
+  ) async {
+    try {
+      final bytes = await fetchBytes();
+      final downloadDir = Directory('/storage/emulated/0/Download');
+      if (!await downloadDir.exists()) {
+        final extStore = await getExternalStorageDirectory();
+        final destDir = Directory('${extStore?.path}/Download');
+        if (!await destDir.exists()) await destDir.create(recursive: true);
+        final destPath = '${destDir.path}/astina_$fileName';
+        await File(destPath).writeAsBytes(bytes);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$label tersimpan di $destPath')),
+          );
+        }
+        return;
+      }
+      final destPath = '${downloadDir.path}/astina_$fileName';
+      await File(destPath).writeAsBytes(bytes);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$label tersimpan di $destPath')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal mengunduh $label: $e')));
+      }
     }
   }
 }
