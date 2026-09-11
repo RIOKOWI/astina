@@ -15,7 +15,7 @@ import '../../features/finance/presentation/pages/my_due_bills_page.dart';
 import '../../features/finance/presentation/pages/my_payments_page.dart';
 import '../../features/finance/presentation/pages/payment_form_page.dart';
 import '../../features/sos/presentation/pages/sos_page.dart';
-import '../../features/my/presentation/pages/my_household_page.dart';
+import '../../features/residents/presentation/pages/my_household_page.dart';
 import '../../features/residents/presentation/pages/my_resident_page.dart';
 import '../../features/residents/presentation/pages/my_document_page.dart';
 import '../../features/residents/presentation/pages/residents_page.dart';
@@ -31,6 +31,10 @@ import '../../features/fcm/presentation/pages/notifications_page.dart';
 import '../../features/complaints/presentation/pages/complaints_page.dart';
 import '../../features/complaints/presentation/pages/complaint_detail_page.dart';
 import '../../features/complaints/presentation/pages/complaint_create_page.dart';
+import '../../features/letters/presentation/pages/letters_page.dart';
+import '../../features/letters/presentation/pages/letter_detail_page.dart';
+import '../../features/letters/presentation/pages/letter_create_page.dart';
+import '../../features/letters/presentation/pages/letter_pending_page.dart';
 import '../../features/residents/presentation/pages/document_viewer_page.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/inventory/presentation/pages/asset_detail_page.dart';
@@ -145,6 +149,34 @@ final appRouter = GoRouter(
       name: 'complaint-detail',
       builder: (context, state) => ComplaintDetailPage(
         complaintId: int.parse(state.pathParameters['id']!),
+      ),
+    ),
+    GoRoute(
+      path: '/letters',
+      name: 'letters',
+      builder: (context, state) => const LettersPage(),
+    ),
+    GoRoute(
+      path: '/letters/create',
+      name: 'letter-create',
+      builder: (context, state) => const LetterCreatePage(),
+    ),
+    GoRoute(
+      path: '/letters/:id',
+      name: 'letter-detail',
+      builder: (context, state) =>
+          LetterDetailPage(letterId: int.parse(state.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/letters/pending',
+      name: 'letters-pending',
+      builder: (context, state) => const LetterPendingPage(),
+    ),
+    GoRoute(
+      path: '/letters/pending/:id',
+      name: 'letter-pending-detail',
+      builder: (context, state) => LetterPendingDetailPage(
+        letterId: int.parse(state.pathParameters['id']!),
       ),
     ),
     GoRoute(
