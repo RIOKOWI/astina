@@ -71,17 +71,17 @@ class _AttachmentViewerPageState extends ConsumerState<AttachmentViewerPage> {
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Text(
-                      'Gagal memuat: $_error',
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              : _buildViewer(),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  'Gagal memuat: $_error',
+                  style: const TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : _buildViewer(),
     );
   }
 
