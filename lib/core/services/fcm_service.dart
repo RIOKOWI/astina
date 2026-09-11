@@ -94,7 +94,7 @@ class FCMService {
       case 'payment_submitted':
       case 'payment_approved':
       case 'payment_rejected':
-        return '/finance/payments';
+        return id != null ? '/finance/payments/$id' : '/finance';
       case 'complaint_created':
       case 'complaint_updated':
         return id != null ? '/complaints/$id' : '/complaints';
