@@ -4,8 +4,7 @@ import '../../../../core/injection/dependency_injection.dart';
 import '../data/datasources/inventory_remote_data_source.dart';
 import '../data/models/asset_model.dart';
 
-final inventoryDataSourceProvider =
-    Provider<InventoryRemoteDataSource>((ref) {
+final inventoryDataSourceProvider = Provider<InventoryRemoteDataSource>((ref) {
   return InventoryRemoteDataSource(ref.watch(dioClientProvider));
 });
 
@@ -108,11 +107,13 @@ class InventoryListNotifier extends Notifier<InventoryListState> {
 
 final inventoryListProvider =
     NotifierProvider<InventoryListNotifier, InventoryListState>(
-  InventoryListNotifier.new,
-);
+      InventoryListNotifier.new,
+    );
 
-final assetDetailProvider =
-    FutureProvider.autoDispose.family<Asset, int>((ref, id) async {
+final assetDetailProvider = FutureProvider.autoDispose.family<Asset, int>((
+  ref,
+  id,
+) async {
   final ds = ref.watch(inventoryDataSourceProvider);
   return ds.getAsset(id);
 });
@@ -178,5 +179,5 @@ class MovementsNotifier extends FamilyNotifier<MovementsState, int> {
 
 final movementsProvider =
     NotifierProvider.family<MovementsNotifier, MovementsState, int>(
-  MovementsNotifier.new,
-);
+      MovementsNotifier.new,
+    );
