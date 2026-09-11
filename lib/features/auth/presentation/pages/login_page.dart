@@ -79,20 +79,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildLogo() {
     return Column(
       children: [
-        Container(
-          width: 80,
-          height: 80,
-          child: const Center(
-            child: Text(
-              'A',
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
         const SizedBox(height: 16),
         const Text(
           'Astina Smart Mobile',
