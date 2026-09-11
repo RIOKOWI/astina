@@ -59,8 +59,6 @@ class ApiConstants {
   static const String generateBills = '/dues/generate-bills';
   static String dueDetail(int id) => '/dues/$id';
   static String dueBillsList(int id) => '/dues/$id/due-bills';
-  static String generateDocument(int letterId) =>
-      '/letters/$letterId/document/generate';
 
   // SOS
   static const String sosAlerts = '/sos/alerts';
@@ -68,9 +66,15 @@ class ApiConstants {
 
   // Letters
   static const String letterTypes = '/letter-types';
+  static String letterType(int id) => '/letter-types/$id';
   static const String myLetters = '/my/letters';
   static const String letters = '/letters';
+  static String letterDetail(int id) => '/letters/$id';
   static const String lettersPending = '/letters/pending';
+  static String letterApprove(int id) => '/letters/$id/approve';
+  static String letterReject(int id) => '/letters/$id/reject';
+  static String letterDocument(int id) => '/letters/$id/document';
+  static String letterGenerateDoc(int id) => '/letters/$id/document/generate';
 
   // Me endpoints (warga)
   static const String meKtp = '/me/documents/ktp';
