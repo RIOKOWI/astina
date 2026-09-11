@@ -75,7 +75,12 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
     } catch (_) {}
   }
 
-  Widget _buildContent(BuildContext context, Activity activity, bool isRT, bool isRead) {
+  Widget _buildContent(
+    BuildContext context,
+    Activity activity,
+    bool isRT,
+    bool isRead,
+  ) {
     final statusColor = switch (activity.status) {
       'published' => AppColors.success,
       'draft' => AppColors.warning,
