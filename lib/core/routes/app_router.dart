@@ -18,6 +18,7 @@ import '../../features/finance/presentation/pages/payment_form_page.dart';
 import '../../features/finance/presentation/pages/payment_detail_page.dart';
 import '../../features/finance/data/datasources/finance_remote_data_source.dart';
 import '../../features/sos/presentation/pages/sos_page.dart';
+import '../../features/sos/presentation/pages/sos_detail_page.dart';
 import '../../features/residents/presentation/pages/my_household_page.dart';
 import '../../features/residents/presentation/pages/my_resident_page.dart';
 import '../../features/residents/presentation/pages/my_document_page.dart';
@@ -285,6 +286,12 @@ final appRouter = GoRouter(
       path: '/sos',
       name: 'sos',
       builder: (context, state) => const SosPage(),
+    ),
+    GoRoute(
+      path: '/sos/:id',
+      name: 'sos-detail',
+      builder: (context, state) =>
+          SosDetailPage(sosId: int.parse(state.pathParameters['id']!)),
     ),
     GoRoute(
       path: '/my/household',
