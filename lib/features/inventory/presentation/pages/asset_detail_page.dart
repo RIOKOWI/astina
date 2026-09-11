@@ -29,8 +29,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () =>
-                context.push('/inventory/${widget.assetId}/edit'),
+            onPressed: () => context.push('/inventory/${widget.assetId}/edit'),
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -41,10 +40,16 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                    Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
                     SizedBox(width: 8),
-                    Text('Nonaktifkan Aset',
-                        style: TextStyle(color: AppColors.error)),
+                    Text(
+                      'Nonaktifkan Aset',
+                      style: TextStyle(color: AppColors.error),
+                    ),
                   ],
                 ),
               ),
@@ -58,18 +63,21 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Text('Error: $e',
-                style: const TextStyle(color: AppColors.error)),
+            child: Text(
+              'Error: $e',
+              style: const TextStyle(color: AppColors.error),
+            ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () =>
-            context.push('/inventory/${widget.assetId}/movement'),
+        onPressed: () => context.push('/inventory/${widget.assetId}/movement'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.swap_vert, color: Colors.white),
-        label:
-            const Text('Catat Pergerakan', style: TextStyle(color: Colors.white)),
+        label: const Text(
+          'Catat Pergerakan',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -140,58 +148,71 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(asset.statusLabel,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    )),
+                child: Text(
+                  asset.statusLabel,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.dark.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(asset.conditionLabel,
-                    style: const TextStyle(
-                        fontSize: 11, color: AppColors.grey)),
+                child: Text(
+                  asset.conditionLabel,
+                  style: const TextStyle(fontSize: 11, color: AppColors.grey),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(asset.code,
-              style: const TextStyle(fontSize: 12, color: AppColors.grey)),
+          Text(
+            asset.code,
+            style: const TextStyle(fontSize: 12, color: AppColors.grey),
+          ),
           const SizedBox(height: 4),
-          Text(asset.name,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.dark,
-              )),
+          Text(
+            asset.name,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.dark,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.category_outlined,
-                  size: 14, color: AppColors.grey),
+              const Icon(
+                Icons.category_outlined,
+                size: 14,
+                color: AppColors.grey,
+              ),
               const SizedBox(width: 4),
-              Text(asset.category,
-                  style:
-                      const TextStyle(fontSize: 13, color: AppColors.grey)),
+              Text(
+                asset.category,
+                style: const TextStyle(fontSize: 13, color: AppColors.grey),
+              ),
               const SizedBox(width: 16),
               const Icon(Icons.straighten, size: 14, color: AppColors.grey),
               const SizedBox(width: 4),
-              Text('${asset.quantity} ${asset.unit}',
-                  style:
-                      const TextStyle(fontSize: 13, color: AppColors.grey)),
+              Text(
+                '${asset.quantity} ${asset.unit}',
+                style: const TextStyle(fontSize: 13, color: AppColors.grey),
+              ),
             ],
           ),
         ],
@@ -216,11 +237,14 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
       ),
       child: Column(
         children: [
-          const Text('Stok Saat Ini',
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white70)),
+          const Text(
+            'Stok Saat Ini',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white70,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
             '${asset.quantity} ${asset.unit}',
@@ -252,11 +276,14 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Informasi',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.dark)),
+          const Text(
+            'Informasi',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.dark,
+            ),
+          ),
           const SizedBox(height: 12),
           if (asset.purchasePrice != null)
             _infoRow('Harga Beli', 'Rp ${asset.purchasePrice}'),
@@ -295,14 +322,19 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Deskripsi',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.dark)),
+          const Text(
+            'Deskripsi',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.dark,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(asset.description!,
-              style: const TextStyle(fontSize: 14, color: AppColors.dark)),
+          Text(
+            asset.description!,
+            style: const TextStyle(fontSize: 14, color: AppColors.dark),
+          ),
         ],
       ),
     );
@@ -313,11 +345,14 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Riwayat Pergerakan',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.dark)),
+        const Text(
+          'Riwayat Pergerakan',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.dark,
+          ),
+        ),
         const SizedBox(height: 12),
         if (movements.isEmpty)
           Container(
@@ -328,13 +363,14 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Center(
-              child: Text('Belum ada pergerakan',
-                  style: TextStyle(color: AppColors.grey)),
+              child: Text(
+                'Belum ada pergerakan',
+                style: TextStyle(color: AppColors.grey),
+              ),
             ),
           )
         else
-          ...movements
-              .map((m) => _MovementTile(movement: m, unit: asset.unit)),
+          ...movements.map((m) => _MovementTile(movement: m, unit: asset.unit)),
       ],
     );
   }
@@ -345,15 +381,20 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
       children: [
         SizedBox(
           width: 100,
-          child: Text(label,
-              style: const TextStyle(fontSize: 13, color: AppColors.grey)),
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: AppColors.grey),
+          ),
         ),
         Expanded(
-          child: Text(value,
-              style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.dark)),
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.dark,
+            ),
+          ),
         ),
       ],
     );
@@ -365,7 +406,8 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
       builder: (ctx) => AlertDialog(
         title: const Text('Nonaktifkan Aset'),
         content: const Text(
-            'Aset akan dinonaktifkan. Riwayat pergerakan tetap tersimpan. Lanjutkan?'),
+          'Aset akan dinonaktifkan. Riwayat pergerakan tetap tersimpan. Lanjutkan?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -428,7 +470,8 @@ class _MovementTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPositive =
-        movement.type == 'in' || (movement.type == 'adjustment' && movement.quantity > 0);
+        movement.type == 'in' ||
+        (movement.type == 'adjustment' && movement.quantity > 0);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -456,8 +499,8 @@ class _MovementTile extends StatelessWidget {
               movement.type == 'in'
                   ? Icons.arrow_downward
                   : movement.type == 'out'
-                      ? Icons.arrow_upward
-                      : Icons.swap_vert,
+                  ? Icons.arrow_upward
+                  : Icons.swap_vert,
               color: _typeColor,
               size: 18,
             ),
@@ -470,14 +513,14 @@ class _MovementTile extends StatelessWidget {
                 Text(
                   movement.description ?? movement.typeLabel,
                   style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.dark),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.dark,
+                  ),
                 ),
                 Text(
                   '${_formatDate(movement.movementAt)} • ${movement.createdBy?.name ?? '-'}',
-                  style:
-                      const TextStyle(fontSize: 11, color: AppColors.grey),
+                  style: const TextStyle(fontSize: 11, color: AppColors.grey),
                 ),
               ],
             ),
