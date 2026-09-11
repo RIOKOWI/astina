@@ -11,6 +11,22 @@ class FinanceRemoteDataSource {
 
   final DioClient _client;
 
+  List<dynamic> _paginatedItems(Map<String, dynamic> responseData) {
+    final body = responseData['data'];
+    if (body is Map) {
+      final items = body['data'];
+      if (items is List<dynamic>) return items;
+    }
+    if (body is List<dynamic>) return body;
+    return const [];
+  }
+
+  Map<String, dynamic> _paginationMeta(Map<String, dynamic> responseData) {
+    final meta = responseData['meta'];
+    if (meta is Map) return Map<String, dynamic>.from(meta);
+    return {};
+  }
+
   Future<CashSummary> getSummary({String? month}) async {
     final response = await _client.get(
       ApiConstants.financeSummary,
@@ -22,6 +38,7 @@ class FinanceRemoteDataSource {
 
   Future<(List<FinanceTransaction>, Map<String, dynamic>)> getTransactions({
     String? type,
+    String? category,
     String? dateFrom,
     String? dateTo,
     int page = 1,
@@ -31,6 +48,7 @@ class FinanceRemoteDataSource {
       ApiConstants.financeTransactions,
       queryParameters: {
         if (type != null && type.isNotEmpty) 'type': type,
+        if (category != null && category.isNotEmpty) 'category': category,
         if (dateFrom != null && dateFrom.isNotEmpty) 'date_from': dateFrom,
         if (dateTo != null && dateTo.isNotEmpty) 'date_to': dateTo,
         'page': page,
@@ -38,10 +56,10 @@ class FinanceRemoteDataSource {
       },
     );
     final data = response.data as Map<String, dynamic>;
-    final list = (data['data']['data'] as List<dynamic>)
+    final list = _paginatedItems(data)
         .map((e) => FinanceTransaction.fromJson(e as Map<String, dynamic>))
         .toList();
-    final meta = data['meta'] as Map<String, dynamic>? ?? {};
+    final meta = _paginationMeta(data);
     return (list, meta);
   }
 
@@ -76,10 +94,10 @@ class FinanceRemoteDataSource {
       queryParameters: {'page': page, 'per_page': perPage},
     );
     final data = response.data as Map<String, dynamic>;
-    final list = (data['data']['data'] as List<dynamic>)
-        .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    final meta = data['meta'] as Map<String, dynamic>? ?? {};
+    final list = _paginatedItems(
+      data,
+    ).map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
+    final meta = _paginationMeta(data);
     return (list, meta);
   }
 
@@ -112,10 +130,10 @@ class FinanceRemoteDataSource {
       },
     );
     final data = response.data as Map<String, dynamic>;
-    final list = (data['data']['data'] as List<dynamic>)
-        .map((e) => DueModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    final meta = data['meta'] as Map<String, dynamic>? ?? {};
+    final list = _paginatedItems(
+      data,
+    ).map((e) => DueModel.fromJson(e as Map<String, dynamic>)).toList();
+    final meta = _paginationMeta(data);
     return (list, meta);
   }
 
@@ -145,6 +163,12 @@ class FinanceRemoteDataSource {
     return DueModel.fromJson(data['data'] as Map<String, dynamic>);
   }
 
+  Future<DueModel> getDue(int dueId) async {
+    final response = await _client.get(ApiConstants.dueDetail(dueId));
+    final data = response.data as Map<String, dynamic>;
+    return DueModel.fromJson(data['data'] as Map<String, dynamic>);
+  }
+
   Future<DueModel> updateDue(
     int dueId, {
     String? name,
@@ -154,16 +178,20 @@ class FinanceRemoteDataSource {
     String? startDate,
     String? endDate,
     bool? isActive,
+    bool includeDescription = false,
+    bool includeStartDate = false,
+    bool includeEndDate = false,
   }) async {
     final response = await _client.put(
       ApiConstants.dueDetail(dueId),
       data: {
         if (name != null) 'name': name,
         if (amount != null) 'amount': amount,
-        if (description != null) 'description': description,
+        if (includeDescription || description != null)
+          'description': description,
         if (frequency != null) 'frequency': frequency,
-        if (startDate != null) 'start_date': startDate,
-        if (endDate != null) 'end_date': endDate,
+        if (includeStartDate || startDate != null) 'start_date': startDate,
+        if (includeEndDate || endDate != null) 'end_date': endDate,
         if (isActive != null) 'is_active': isActive,
       },
     );
@@ -175,11 +203,30 @@ class FinanceRemoteDataSource {
     await _client.delete(ApiConstants.dueDetail(dueId));
   }
 
-  Future<void> generateBills({required int year, required int month}) async {
-    await _client.post(
+  Future<int> generateBills({required int year, required int month}) async {
+    final response = await _client.post(
       ApiConstants.generateBills,
       data: {'year': year, 'month': month},
     );
+    final data = response.data as Map<String, dynamic>;
+    final result = data['data'];
+    return result is Map ? result['created'] as int? ?? 0 : 0;
+  }
+
+  Future<(List<DueBillModel>, Map<String, dynamic>)> getDueBills(
+    int dueId, {
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    final response = await _client.get(
+      ApiConstants.dueBillsList(dueId),
+      queryParameters: {'page': page, 'per_page': perPage},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final list = _paginatedItems(
+      data,
+    ).map((e) => DueBillModel.fromJson(e as Map<String, dynamic>)).toList();
+    return (list, _paginationMeta(data));
   }
 
   // --- Warga endpoints ---
@@ -193,10 +240,10 @@ class FinanceRemoteDataSource {
       queryParameters: {'page': page, 'per_page': perPage},
     );
     final data = response.data as Map<String, dynamic>;
-    final list = (data['data']['data'] as List<dynamic>)
-        .map((e) => DueBillModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    final meta = data['meta'] as Map<String, dynamic>? ?? {};
+    final list = _paginatedItems(
+      data,
+    ).map((e) => DueBillModel.fromJson(e as Map<String, dynamic>)).toList();
+    final meta = _paginationMeta(data);
     return (list, meta);
   }
 
@@ -209,10 +256,10 @@ class FinanceRemoteDataSource {
       queryParameters: {'page': page, 'per_page': perPage},
     );
     final data = response.data as Map<String, dynamic>;
-    final list = (data['data']['data'] as List<dynamic>)
-        .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    final meta = data['meta'] as Map<String, dynamic>? ?? {};
+    final list = _paginatedItems(
+      data,
+    ).map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
+    final meta = _paginationMeta(data);
     return (list, meta);
   }
 
@@ -233,6 +280,12 @@ class FinanceRemoteDataSource {
     return PaymentModel.fromJson(data['data'] as Map<String, dynamic>);
   }
 
+  Future<PaymentModel> getPayment(int paymentId) async {
+    final response = await _client.get(ApiConstants.paymentDetail(paymentId));
+    final data = response.data as Map<String, dynamic>;
+    return PaymentModel.fromJson(data['data'] as Map<String, dynamic>);
+  }
+
   Future<PaymentProof> uploadPaymentProof(
     int paymentId,
     String filePath,
@@ -247,23 +300,33 @@ class FinanceRemoteDataSource {
     final data = response.data as Map<String, dynamic>;
     return PaymentProof.fromJson(data['data'] as Map<String, dynamic>);
   }
+
+  Future<List<int>> downloadPaymentProof(String url) {
+    return _client.downloadBytes(url);
+  }
 }
 
 class DueBillModel {
   final int id;
   final int dueId;
   final DueInfo? due;
+  final int residentId;
+  final Resident? resident;
   final int amount;
   final String dueDate;
   final String status;
+  final DateTime? createdAt;
 
   const DueBillModel({
     required this.id,
     required this.dueId,
     this.due,
+    required this.residentId,
+    this.resident,
     required this.amount,
     required this.dueDate,
     required this.status,
+    this.createdAt,
   });
 
   factory DueBillModel.fromJson(Map<String, dynamic> json) {
@@ -273,9 +336,16 @@ class DueBillModel {
       due: json['due'] != null
           ? DueInfo.fromJson(json['due'] as Map<String, dynamic>)
           : null,
+      residentId: json['resident_id'] as int,
+      resident: json['resident'] != null
+          ? Resident.fromJson(json['resident'] as Map<String, dynamic>)
+          : null,
       amount: json['amount'] as int,
       dueDate: json['due_date'] as String,
       status: json['status'] as String,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
     );
   }
 
@@ -286,6 +356,7 @@ class DueBillModel {
       case 'pending':
         return 'Menunggu';
       case 'approved':
+      case 'paid':
         return 'Lunas';
       case 'rejected':
         return 'Ditolak';
