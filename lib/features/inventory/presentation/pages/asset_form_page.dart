@@ -40,8 +40,9 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
   Future<void> _loadAsset() async {
     setState(() => _isLoading = true);
     try {
-      final asset =
-          await ref.read(inventoryDataSourceProvider).getAsset(widget.assetId!);
+      final asset = await ref
+          .read(inventoryDataSourceProvider)
+          .getAsset(widget.assetId!);
       if (mounted) {
         setState(() {
           _nameController.text = asset.name;
@@ -59,7 +60,10 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Gagal memuat: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -151,10 +155,19 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
                     label: 'Status',
                     value: _status,
                     items: const [
-                      DropdownMenuItem(value: 'available', child: Text('Tersedia')),
+                      DropdownMenuItem(
+                        value: 'available',
+                        child: Text('Tersedia'),
+                      ),
                       DropdownMenuItem(value: 'in_use', child: Text('Dipakai')),
-                      DropdownMenuItem(value: 'maintenance', child: Text('Perbaikan')),
-                      DropdownMenuItem(value: 'retired', child: Text('Nonaktif')),
+                      DropdownMenuItem(
+                        value: 'maintenance',
+                        child: Text('Perbaikan'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'retired',
+                        child: Text('Nonaktif'),
+                      ),
                     ],
                     onChanged: (v) => setState(() => _status = v!),
                   ),
@@ -165,14 +178,17 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
                       backgroundColor: AppColors.primary,
                       minimumSize: const Size.fromHeight(52),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: _isSubmitting
                         ? const SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Text(
                             isEditing ? 'Simpan Perubahan' : 'Tambah Aset',
@@ -197,8 +213,10 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -207,11 +225,11 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
           enabled: enabled,
           decoration: InputDecoration(
             hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
           validator: required
               ? (v) => v == null || v.isEmpty ? '$label wajib diisi' : null
@@ -230,19 +248,21 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
           items: items,
           onChanged: onChanged,
           decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
       ],
@@ -291,9 +311,11 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
         context.go('/inventory');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditing
-                ? 'Aset berhasil diperbarui'
-                : 'Aset berhasil ditambahkan'),
+            content: Text(
+              isEditing
+                  ? 'Aset berhasil diperbarui'
+                  : 'Aset berhasil ditambahkan',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -301,7 +323,10 @@ class _AssetFormPageState extends ConsumerState<AssetFormPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Gagal: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
