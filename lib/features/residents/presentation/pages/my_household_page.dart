@@ -104,7 +104,7 @@ class _MyHouseholdPageState extends ConsumerState<MyHouseholdPage> {
                       style: TextStyle(fontSize: 12, color: AppColors.grey),
                     ),
                     Text(
-                      household.address,
+                      household.address ?? '-',
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -119,11 +119,15 @@ class _MyHouseholdPageState extends ConsumerState<MyHouseholdPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              _buildChip('RT ${household.rt}'),
-              const SizedBox(width: 8),
-              _buildChip('RW ${household.rw}'),
-              if (household.postalCode != null) ...[
+              if (household.rt != null) ...[
+                _buildChip('RT ${household.rt}'),
                 const SizedBox(width: 8),
+              ],
+              if (household.rw != null) ...[
+                _buildChip('RW ${household.rw}'),
+                const SizedBox(width: 8),
+              ],
+              if (household.postalCode != null) ...[
                 _buildChip(household.postalCode!),
               ],
             ],
@@ -317,7 +321,7 @@ class _MyHouseholdPageState extends ConsumerState<MyHouseholdPage> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Gagal memuat data',
+                msg,
                 style: const TextStyle(color: AppColors.error),
               ),
             ),
