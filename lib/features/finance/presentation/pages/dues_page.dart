@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../data/models/due_model.dart';
 import '../../providers/finance_provider.dart';
 
 class DuesPage extends ConsumerStatefulWidget {
@@ -46,10 +48,12 @@ class _DuesPageState extends ConsumerState<DuesPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: FilterChip(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  FilterChip(
                     label: const Text('Aktif'),
                     selected: !_includeInactive,
                     onSelected: (_) {
@@ -57,10 +61,7 @@ class _DuesPageState extends ConsumerState<DuesPage> {
                       _load();
                     },
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilterChip(
+                  FilterChip(
                     label: const Text('Semua'),
                     selected: _includeInactive,
                     onSelected: (_) {
@@ -68,21 +69,38 @@ class _DuesPageState extends ConsumerState<DuesPage> {
                       _load();
                     },
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => _load(),
-              child: state.dues.isEmpty && !state.isLoading
+              child: state.error != null
+                  ? _buildError(state.error!)
+                  : state.dues.isEmpty && !state.isLoading
                   ? _buildEmpty()
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: state.dues.length,
+                      itemCount: state.dues.length + (state.hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (index == state.dues.length) {
+                          if (state.isLoading) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          ref
+                              .read(duesListProvider.notifier)
+                              .loadMore(includeInactive: _includeInactive);
+                          return const SizedBox.shrink();
+                        }
                         return _DueCard(
                           due: state.dues[index],
+                          onTap: () => context.push(
+                            '/finance/dues/${state.dues[index].id}',
+                          ),
                           onEdit: () => _showFormDialog(state.dues[index]),
                           onDelete: () => _confirmDelete(state.dues[index].id),
                         );
@@ -124,19 +142,45 @@ class _DuesPageState extends ConsumerState<DuesPage> {
     );
   }
 
-  void _showFormDialog(dynamic existingDue) {
+  Widget _buildError(String message) {
+    return ListView(
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Center(
+          child: Column(
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              const SizedBox(height: 16),
+              const Text(
+                'Gagal memuat iuran',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: AppColors.grey),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _load, child: const Text('Coba Lagi')),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showFormDialog(DueModel? existingDue) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (ctx) => _DueFormSheet(
-        existingDue: existingDue,
-        onSaved: () {
-          ref.invalidate(duesListProvider);
-        },
-      ),
+      builder: (ctx) => _DueFormSheet(existingDue: existingDue, onSaved: _load),
     );
   }
 
@@ -154,7 +198,7 @@ class _DuesPageState extends ConsumerState<DuesPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<int>(
-                value: selectedYear,
+                initialValue: selectedYear,
                 decoration: const InputDecoration(labelText: 'Tahun'),
                 items: List.generate(5, (i) => now.year - 2 + i)
                     .map((y) => DropdownMenuItem(value: y, child: Text('$y')))
@@ -163,7 +207,7 @@ class _DuesPageState extends ConsumerState<DuesPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
-                value: selectedMonth,
+                initialValue: selectedMonth,
                 decoration: const InputDecoration(labelText: 'Bulan'),
                 items: List.generate(12, (i) => i + 1)
                     .map(
@@ -186,14 +230,15 @@ class _DuesPageState extends ConsumerState<DuesPage> {
               onPressed: () async {
                 Navigator.pop(ctx);
                 try {
-                  await ref
+                  final created = await ref
                       .read(financeRemoteDataSourceProvider)
                       .generateBills(year: selectedYear, month: selectedMonth);
                   if (mounted) {
+                    _load();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Tagihan bulan ${_monthName(selectedMonth)} $selectedYear berhasil dibuat',
+                          '$created tagihan ${_monthName(selectedMonth)} $selectedYear berhasil dibuat',
                         ),
                         backgroundColor: AppColors.success,
                       ),
@@ -243,7 +288,7 @@ class _DuesPageState extends ConsumerState<DuesPage> {
     if (confirmed == true) {
       try {
         await ref.read(financeRemoteDataSourceProvider).deleteDue(dueId);
-        ref.invalidate(duesListProvider);
+        _load();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -288,104 +333,114 @@ class _DuesPageState extends ConsumerState<DuesPage> {
 class _DueCard extends StatelessWidget {
   const _DueCard({
     required this.due,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
 
-  final dynamic due;
+  final DueModel due;
+  final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.dark.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      due.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            due.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (due.description != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              due.description!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.grey,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    if (due.description != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        due.description!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.grey,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                    ],
+                      decoration: BoxDecoration(
+                        color: due.isActive
+                            ? AppColors.success.withValues(alpha: 0.1)
+                            : AppColors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        due.isActive ? 'Aktif' : 'Nonaktif',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: due.isActive
+                              ? AppColors.success
+                              : AppColors.grey,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: due.isActive
-                      ? AppColors.success.withValues(alpha: 0.1)
-                      : AppColors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _infoChip(_formatCurrency(due.amount)),
+                    const SizedBox(width: 8),
+                    _infoChip(due.frequencyLabel),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      tooltip: 'Edit iuran',
+                      color: AppColors.grey,
+                      onPressed: () {
+                        onEdit();
+                      },
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: 'Nonaktifkan iuran',
+                      color: AppColors.error,
+                      onPressed: onDelete,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  due.isActive ? 'Aktif' : 'Nonaktif',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: due.isActive ? AppColors.success : AppColors.grey,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _infoChip(_formatCurrency(due.amount)),
-              const SizedBox(width: 8),
-              _infoChip(due.frequencyLabel),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 20),
-                color: AppColors.grey,
-                onPressed: onEdit,
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(4),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: AppColors.error,
-                onPressed: onDelete,
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(4),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -416,7 +471,7 @@ class _DueCard extends StatelessWidget {
 class _DueFormSheet extends ConsumerStatefulWidget {
   const _DueFormSheet({required this.existingDue, required this.onSaved});
 
-  final dynamic existingDue;
+  final DueModel? existingDue;
   final VoidCallback onSaved;
 
   @override
@@ -431,6 +486,8 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
   String _frequency = 'monthly';
   bool _isActive = true;
   bool _isSubmitting = false;
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   bool get isEditing => widget.existingDue != null;
 
@@ -438,11 +495,16 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
   void initState() {
     super.initState();
     if (isEditing) {
-      _nameController.text = widget.existingDue.name;
-      _amountController.text = widget.existingDue.amount.toString();
-      _descriptionController.text = widget.existingDue.description ?? '';
-      _frequency = widget.existingDue.frequency ?? 'monthly';
-      _isActive = widget.existingDue.isActive;
+      final due = widget.existingDue!;
+      _nameController.text = due.name;
+      _amountController.text = due.amount.toString();
+      _descriptionController.text = due.description ?? '';
+      _frequency = due.frequency == 'one_time'
+          ? 'one-time'
+          : due.frequency ?? 'monthly';
+      _isActive = due.isActive;
+      _startDate = DateTime.tryParse(due.startDate ?? '');
+      _endDate = DateTime.tryParse(due.endDate ?? '');
     }
   }
 
@@ -480,13 +542,14 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
+                maxLength: 255,
                 decoration: const InputDecoration(
                   labelText: 'Nama Iuran',
                   hintText: 'Contoh: Iuran Bulanan RT 05',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Nama wajib diisi' : null,
+                    v == null || v.trim().isEmpty ? 'Nama wajib diisi' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -499,14 +562,17 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Jumlah wajib diisi';
-                  if (int.tryParse(v) == null)
+                  final amount = int.tryParse(v);
+                  if (amount == null) {
                     return 'Masukkan angka yang valid';
+                  }
+                  if (amount < 100) return 'Jumlah minimal Rp 100';
                   return null;
                 },
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _frequency,
+                initialValue: _frequency,
                 decoration: const InputDecoration(
                   labelText: 'Frekuensi',
                   border: OutlineInputBorder(),
@@ -518,13 +584,43 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
                     child: Text('Triwulanan'),
                   ),
                   DropdownMenuItem(value: 'yearly', child: Text('Tahunan')),
-                  DropdownMenuItem(value: 'one_time', child: Text('Sekali')),
+                  DropdownMenuItem(value: 'one-time', child: Text('Sekali')),
                 ],
                 onChanged: (v) => setState(() => _frequency = v!),
               ),
               const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _dateField(
+                      label: 'Tanggal Mulai',
+                      value: _startDate,
+                      onTap: () => _pickDate(isStart: true),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _dateField(
+                      label: 'Tanggal Selesai',
+                      value: _endDate,
+                      onTap: () => _pickDate(isStart: false),
+                    ),
+                  ),
+                ],
+              ),
+              if (_startDate != null &&
+                  _endDate != null &&
+                  _endDate!.isBefore(_startDate!)) ...[
+                const SizedBox(height: 6),
+                const Text(
+                  'Tanggal selesai tidak boleh sebelum tanggal mulai',
+                  style: TextStyle(fontSize: 12, color: AppColors.error),
+                ),
+              ],
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _descriptionController,
+                maxLength: 1000,
                 maxLines: 2,
                 decoration: const InputDecoration(
                   labelText: 'Deskripsi (opsional)',
@@ -572,22 +668,94 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
     );
   }
 
+  Widget _dateField({
+    required String label,
+    required DateTime? value,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          suffixIcon: value == null
+              ? const Icon(Icons.calendar_today_outlined, size: 18)
+              : IconButton(
+                  onPressed: () {
+                    setState(() {
+                      if (label == 'Tanggal Mulai') {
+                        _startDate = null;
+                      } else {
+                        _endDate = null;
+                      }
+                    });
+                  },
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: 'Hapus tanggal',
+                ),
+        ),
+        child: Text(value == null ? 'Opsional' : _formatDate(value)),
+      ),
+    );
+  }
+
+  Future<void> _pickDate({required bool isStart}) async {
+    final initial = isStart
+        ? _startDate ?? DateTime.now()
+        : _endDate ?? _startDate ?? DateTime.now();
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (selected == null || !mounted) return;
+    setState(() {
+      if (isStart) {
+        _startDate = selected;
+        if (_endDate != null && _endDate!.isBefore(selected)) {
+          _endDate = null;
+        }
+      } else {
+        _endDate = selected;
+      }
+    });
+  }
+
+  String _formatDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_startDate != null &&
+        _endDate != null &&
+        _endDate!.isBefore(_startDate!)) {
+      return;
+    }
     setState(() => _isSubmitting = true);
 
     try {
       final ds = ref.read(financeRemoteDataSourceProvider);
       if (isEditing) {
         await ds.updateDue(
-          widget.existingDue.id,
+          widget.existingDue!.id,
           name: _nameController.text.trim(),
           amount: int.parse(_amountController.text.trim()),
           description: _descriptionController.text.trim().isEmpty
               ? null
               : _descriptionController.text.trim(),
           frequency: _frequency,
+          startDate: _startDate == null ? null : _formatDate(_startDate!),
+          endDate: _endDate == null ? null : _formatDate(_endDate!),
           isActive: _isActive,
+          includeDescription: true,
+          includeStartDate: true,
+          includeEndDate: true,
         );
       } else {
         await ds.createDue(
@@ -597,6 +765,8 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
               ? null
               : _descriptionController.text.trim(),
           frequency: _frequency,
+          startDate: _startDate == null ? null : _formatDate(_startDate!),
+          endDate: _endDate == null ? null : _formatDate(_endDate!),
           isActive: _isActive,
         );
       }
