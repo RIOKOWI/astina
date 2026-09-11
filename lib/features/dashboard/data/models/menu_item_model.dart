@@ -120,7 +120,7 @@ abstract final class MenuConfig {
     MenuItemModel(
       icon: Icons.mail_outlined,
       label: 'Surat',
-      route: '/letters',
+      route: '/letters/pending',
       roles: [UserRole.rt],
     ),
     MenuItemModel(
