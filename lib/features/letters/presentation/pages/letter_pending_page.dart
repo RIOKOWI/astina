@@ -143,7 +143,7 @@ class _LetterPendingPageState extends ConsumerState<LetterPendingPage> {
               Icon(Icons.check_circle_outline, size: 64, color: AppColors.grey),
               SizedBox(height: 16),
               Text(
-                'Tidak ada surat menungg',
+                'Tidak ada surat menunggu',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -480,6 +480,7 @@ class _LetterPendingDetailPageState
             backgroundColor: AppColors.success,
           ),
         );
+        context.pop();
       }
     } on DioException catch (e) {
       if (mounted) {
@@ -509,6 +510,7 @@ class _LetterPendingDetailPageState
             backgroundColor: AppColors.success,
           ),
         );
+        context.pop();
       }
     } on DioException catch (e) {
       if (mounted) {
