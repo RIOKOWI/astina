@@ -1,23 +1,23 @@
 class HouseholdModel {
   final int id;
   final String noKk;
-  final String address;
-  final String rt;
-  final String rw;
+  final String? address;
+  final String? rt;
+  final String? rw;
   final String? postalCode;
-  final String status;
-  final HouseholdMember headResident;
+  final String? status;
+  final HouseholdMember? headResident;
   final List<HouseholdMember> members;
 
   const HouseholdModel({
     required this.id,
     required this.noKk,
-    required this.address,
-    required this.rt,
-    required this.rw,
+    this.address,
+    this.rt,
+    this.rw,
     this.postalCode,
-    required this.status,
-    required this.headResident,
+    this.status,
+    this.headResident,
     required this.members,
   });
 
@@ -25,17 +25,20 @@ class HouseholdModel {
     return HouseholdModel(
       id: json['id'] as int,
       noKk: json['no_kk'] as String,
-      address: json['address'] as String,
-      rt: json['rt'] as String,
-      rw: json['rw'] as String,
+      address: json['address'] as String?,
+      rt: json['rt'] as String?,
+      rw: json['rw'] as String?,
       postalCode: json['postal_code'] as String?,
-      status: json['status'] as String,
-      headResident: HouseholdMember.fromJson(
-        json['head_resident'] as Map<String, dynamic>,
-      ),
-      members: (json['members'] as List<dynamic>)
-          .map((e) => HouseholdMember.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      status: json['status'] as String?,
+      headResident: json['head_resident'] != null
+          ? HouseholdMember.fromJson(
+              json['head_resident'] as Map<String, dynamic>)
+          : null,
+      members: (json['members'] as List<dynamic>?)
+              ?.map(
+                  (e) => HouseholdMember.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }
@@ -58,7 +61,7 @@ class HouseholdMember {
       id: json['id'] as int,
       fullName: json['full_name'] as String,
       phone: json['phone'] as String?,
-      relationship: json['relationship'] as String,
+      relationship: (json['relationship'] as String?) ?? '',
     );
   }
 
