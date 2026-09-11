@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../data/models/payment_model.dart';
 import '../../providers/finance_provider.dart';
 
 class MyPaymentsPage extends ConsumerStatefulWidget {
@@ -51,7 +53,14 @@ class _MyPaymentsPageState extends ConsumerState<MyPaymentsPage> {
                     ref.read(myPaymentsProvider.notifier).loadMore();
                     return const SizedBox.shrink();
                   }
-                  return _PaymentCard(payment: state.payments[index]);
+                  final payment = state.payments[index];
+                  return _PaymentCard(
+                    payment: payment,
+                    onTap: () async {
+                      await context.push('/finance/payments/${payment.id}');
+                      if (mounted) _load();
+                    },
+                  );
                 },
               ),
       ),
@@ -111,9 +120,10 @@ class _MyPaymentsPageState extends ConsumerState<MyPaymentsPage> {
 }
 
 class _PaymentCard extends StatelessWidget {
-  const _PaymentCard({required this.payment});
+  const _PaymentCard({required this.payment, required this.onTap});
 
-  final dynamic payment;
+  final PaymentModel payment;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -123,115 +133,127 @@ class _PaymentCard extends StatelessWidget {
         ? AppColors.error
         : Colors.orange;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.dark.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      payment.dueBill?.due?.name ?? 'Iuran',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            payment.dueBill?.due?.name ?? 'Iuran',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            payment.isApproved
+                                ? 'Disetujui ${_formatDate(payment.approvedAt)}'
+                                : payment.isRejected
+                                ? 'Ditolak'
+                                : 'Menunggu persetujuan',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      payment.isApproved
-                          ? 'Disetujui ${_formatDate(payment.approvedAt)}'
-                          : payment.isRejected
-                          ? 'Ditolak'
-                          : 'Menunggu persetujuan',
-                      style: TextStyle(fontSize: 12, color: AppColors.grey),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        payment.isApproved
+                            ? 'Lunas'
+                            : payment.isRejected
+                            ? 'Ditolak'
+                            : 'Pending',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  payment.isApproved
-                      ? 'Lunas'
-                      : payment.isRejected
-                      ? 'Ditolak'
-                      : 'Pending',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                _formatCurrency(payment.amount),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-              const Spacer(),
-              if (payment.isRejected && payment.rejectionReason != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    payment.rejectionReason!,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.error,
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(
+                      _formatCurrency(payment.amount),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                     ),
+                    const Spacer(),
+                    if (payment.isRejected && payment.rejectionReason != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          payment.rejectionReason!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                if (payment.proofs.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.attachment,
+                        size: 14,
+                        color: AppColors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${payment.proofs.length} bukti upload',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.grey,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-            ],
-          ),
-          if (payment.proofs.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.attachment, size: 14, color: AppColors.grey),
-                const SizedBox(width: 4),
-                Text(
-                  '${payment.proofs.length} bukti upload',
-                  style: const TextStyle(fontSize: 12, color: AppColors.grey),
-                ),
+                ],
               ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
