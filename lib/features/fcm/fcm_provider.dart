@@ -120,8 +120,8 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
 
 final notificationsProvider =
     NotifierProvider<NotificationsNotifier, NotificationsState>(
-  NotificationsNotifier.new,
-);
+      NotificationsNotifier.new,
+    );
 
 final unreadCountProvider = Provider<int>((ref) {
   return ref.watch(notificationsProvider).unreadCount;
