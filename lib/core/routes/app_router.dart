@@ -56,6 +56,7 @@ final _restrictedRoutes = {
   '/finance/payments/pending': [UserRole.bendahara],
   '/complaints/create': [UserRole.warga],
   '/letters/create': [UserRole.warga],
+  '/letters/pending': [UserRole.rt],
 };
 
 UserRole? _getRequiredRole(String path) {
@@ -161,12 +162,8 @@ final appRouter = GoRouter(
       name: 'letter-create',
       builder: (context, state) => const LetterCreatePage(),
     ),
-    GoRoute(
-      path: '/letters/:id',
-      name: 'letter-detail',
-      builder: (context, state) =>
-          LetterDetailPage(letterId: int.parse(state.pathParameters['id']!)),
-    ),
+    // NOTE: /letters/pending must be declared BEFORE /letters/:id
+    // to prevent GoRouter from matching "pending" as the :id parameter
     GoRoute(
       path: '/letters/pending',
       name: 'letters-pending',
@@ -178,6 +175,12 @@ final appRouter = GoRouter(
       builder: (context, state) => LetterPendingDetailPage(
         letterId: int.parse(state.pathParameters['id']!),
       ),
+    ),
+    GoRoute(
+      path: '/letters/:id',
+      name: 'letter-detail',
+      builder: (context, state) =>
+          LetterDetailPage(letterId: int.parse(state.pathParameters['id']!)),
     ),
     GoRoute(
       path: '/_document_viewer',
