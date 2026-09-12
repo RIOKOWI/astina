@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../data/models/admin_user_model.dart';
 import '../../providers/user_admin_provider.dart';
 
@@ -49,7 +50,7 @@ class _UserDetailPageState extends ConsumerState<UserDetailPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              'Error: $e',
+              friendlyErrorMessage(e),
               style: const TextStyle(color: AppColors.error),
             ),
           ),
