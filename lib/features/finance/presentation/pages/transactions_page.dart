@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
 
@@ -188,7 +189,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  message,
+                  friendlyErrorMessage(message),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, color: AppColors.grey),
                 ),
