@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../providers/household_admin_provider.dart';
 
 class HouseholdsPage extends ConsumerStatefulWidget {
@@ -32,7 +33,9 @@ class _HouseholdsPageState extends ConsumerState<HouseholdsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(householdsListProvider.notifier).load(),
-        child: state.households.isEmpty && !state.isLoading
+        child: state.error != null
+            ? _buildError(state.error!)
+            : state.households.isEmpty && !state.isLoading
             ? _buildEmpty()
             : ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -166,6 +169,36 @@ class _HouseholdsPageState extends ConsumerState<HouseholdsPage> {
               fontWeight: FontWeight.w600,
               color: AppColors.dark,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(String msg) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+          const SizedBox(height: 16),
+          const Text(
+            'Gagal memuat data keluarga',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              friendlyErrorMessage(msg),
+              style: const TextStyle(fontSize: 12, color: AppColors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => ref.read(householdsListProvider.notifier).load(),
+            child: const Text('Coba Lagi'),
           ),
         ],
       ),
