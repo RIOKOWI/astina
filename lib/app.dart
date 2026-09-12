@@ -48,4 +48,3 @@ class _AstinaAppState extends ConsumerState<AstinaApp> {
     );
   }
 }
-
