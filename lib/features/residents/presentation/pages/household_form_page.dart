@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../data/models/admin_resident_model.dart';
 import '../../providers/household_admin_provider.dart';
 import '../../providers/resident_admin_provider.dart';
@@ -63,7 +64,7 @@ class _HouseholdFormPageState extends ConsumerState<HouseholdFormPage> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memuat: $e'),
+            content: Text(friendlyErrorMessage(e)),
             backgroundColor: AppColors.error,
           ),
         );
