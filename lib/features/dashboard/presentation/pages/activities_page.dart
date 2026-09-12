@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../data/models/activity_model.dart';
 import '../../providers/activity_provider.dart';
@@ -98,7 +99,9 @@ class _ActivitiesPageState extends ConsumerState<ActivitiesPage> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => _load(),
-              child: state.activities.isEmpty && !state.isLoading
+              child: state.error != null
+                  ? _buildError(state.error!)
+                  : state.activities.isEmpty && !state.isLoading
                   ? _buildEmpty()
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -280,6 +283,37 @@ class _ActivitiesPageState extends ConsumerState<ActivitiesPage> {
                   color: AppColors.dark,
                 ),
               ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildError(String msg) {
+    return ListView(
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Center(
+          child: Column(
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              const SizedBox(height: 16),
+              const Text(
+                'Gagal memuat aktivitas',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  friendlyErrorMessage(msg),
+                  style: const TextStyle(fontSize: 12, color: AppColors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _load, child: const Text('Coba Lagi')),
             ],
           ),
         ),
