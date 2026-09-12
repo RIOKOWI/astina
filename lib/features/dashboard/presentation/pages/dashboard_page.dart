@@ -40,7 +40,11 @@ class DashboardPage extends ConsumerWidget {
           heroTag: 'sos_fab',
           backgroundColor: AppColors.error,
           onPressed: () => _onSosPressed(context, ref),
-          child: const Icon(Icons.warning_rounded, size: 36, color: Colors.white),
+          child: const Icon(
+            Icons.warning_rounded,
+            size: 36,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -342,7 +346,9 @@ class DashboardPage extends ConsumerWidget {
         ),
       );
 
-      final alert = await ref.read(sosNotifierProvider.notifier).triggerSos(
+      final alert = await ref
+          .read(sosNotifierProvider.notifier)
+          .triggerSos(
             latitude: position.latitude,
             longitude: position.longitude,
           );
