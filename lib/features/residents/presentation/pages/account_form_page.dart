@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../providers/resident_admin_provider.dart';
 
 class AccountFormPage extends ConsumerStatefulWidget {
@@ -48,7 +49,7 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memuat data warga: $e'),
+            content: Text(friendlyErrorMessage(e)),
             backgroundColor: AppColors.error,
           ),
         );
