@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../data/models/sos_alert_model.dart';
 import '../../providers/sos_provider.dart';
@@ -31,7 +32,7 @@ class SosDetailPage extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              'Error: $e',
+              friendlyErrorMessage(e),
               style: const TextStyle(color: AppColors.error),
             ),
           ),
