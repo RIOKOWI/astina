@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
 
@@ -81,7 +82,7 @@ class _FinancePageState extends ConsumerState<FinancePage> {
               summaryAsync.when(
                 data: (summary) => _buildSummaryCard(summary),
                 loading: () => const _SummarySkeleton(),
-                error: (e, _) => _buildErrorCard(e.toString()),
+                error: (e, _) => _buildErrorCard(friendlyErrorMessage(e)),
               ),
               const SizedBox(height: 24),
               const Text(
