@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../data/models/admin_resident_model.dart';
 import '../../providers/resident_admin_provider.dart';
 
@@ -43,7 +44,7 @@ class _ResidentDetailPageState extends ConsumerState<ResidentDetailPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              'Error: $e',
+              friendlyErrorMessage(e),
               style: const TextStyle(color: AppColors.error),
             ),
           ),
