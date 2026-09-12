@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../providers/finance_provider.dart';
 
 class MyDueBillsPage extends ConsumerStatefulWidget {
@@ -102,7 +103,7 @@ class _MyDueBillsPageState extends ConsumerState<MyDueBillsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  msg,
+                  friendlyErrorMessage(msg),
                   style: const TextStyle(fontSize: 12, color: AppColors.grey),
                   textAlign: TextAlign.center,
                 ),
