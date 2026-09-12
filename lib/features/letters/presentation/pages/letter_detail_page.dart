@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../providers/letter_provider.dart';
 
 class LetterDetailPage extends ConsumerWidget {
@@ -26,7 +27,7 @@ class LetterDetailPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text(
-            'Error: $e',
+            friendlyErrorMessage(e),
             style: const TextStyle(color: AppColors.error),
           ),
         ),
