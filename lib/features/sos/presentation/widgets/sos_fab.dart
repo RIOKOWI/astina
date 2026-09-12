@@ -24,7 +24,11 @@ class SosFab extends ConsumerWidget {
     );
   }
 
-  Future<void> _onPressed(BuildContext context, WidgetRef ref, NavigatorState nav) async {
+  Future<void> _onPressed(
+    BuildContext context,
+    WidgetRef ref,
+    NavigatorState nav,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
 
@@ -37,7 +41,9 @@ class SosFab extends ConsumerWidget {
       pageBuilder: (ctx, anim, secondaryAnim) => ScaleTransition(
         scale: anim,
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Row(
             children: [
               Icon(Icons.warning, color: AppColors.error),
@@ -125,7 +131,9 @@ class SosFab extends ConsumerWidget {
         ),
       );
 
-      final alert = await ref.read(sosNotifierProvider.notifier).triggerSos(
+      final alert = await ref
+          .read(sosNotifierProvider.notifier)
+          .triggerSos(
             latitude: position.latitude,
             longitude: position.longitude,
           );
@@ -150,4 +158,3 @@ class SosFab extends ConsumerWidget {
     }
   }
 }
-
