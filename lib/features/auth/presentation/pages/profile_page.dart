@@ -50,7 +50,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 subtitle: 'Ganti password akun',
                 onTap: () => context.push('/change-password'),
               ),
-              const Spacer(),
+              const SizedBox(height: 24),
               _buildLogoutButton(),
               const SizedBox(height: 24),
             ],
@@ -99,7 +99,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
             child: Center(
               child: Text(
-                user?.resident?.fullName.substring(0, 1).toUpperCase() ?? 'A',
+                user?.resident?.fullName?.substring(0, 1).toUpperCase() ?? 'A',
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
