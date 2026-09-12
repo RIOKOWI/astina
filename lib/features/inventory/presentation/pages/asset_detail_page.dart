@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../data/models/asset_model.dart';
 import '../../providers/inventory_provider.dart';
 
@@ -64,7 +65,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              'Error: $e',
+              friendlyErrorMessage(e),
               style: const TextStyle(color: AppColors.error),
             ),
           ),
