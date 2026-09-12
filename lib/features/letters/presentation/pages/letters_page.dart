@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../providers/letter_provider.dart';
 
 class LettersPage extends ConsumerStatefulWidget {
@@ -66,7 +67,7 @@ class _LettersPageState extends ConsumerState<LettersPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Text(
-                      'Gagal memuat data: $e',
+                      friendlyErrorMessage(e),
                       style: const TextStyle(color: AppColors.error),
                     ),
                   ),
