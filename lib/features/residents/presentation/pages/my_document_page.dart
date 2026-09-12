@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../providers/document_provider.dart';
 
 class MyDocumentPage extends ConsumerStatefulWidget {
@@ -431,7 +432,7 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Gagal memuat data',
+                friendlyErrorMessage(msg),
                 style: const TextStyle(color: AppColors.error),
               ),
             ),
