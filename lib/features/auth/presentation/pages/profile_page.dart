@@ -28,32 +28,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         backgroundColor: AppColors.dark,
         foregroundColor: AppColors.white,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // Profile card
-              _buildProfileCard(user),
-              const SizedBox(height: 20),
-              // Action buttons
-              _buildActionTile(
-                icon: Icons.person_outline,
-                label: 'Ubah Akun',
-                subtitle: 'Nomor HP & Email',
-                onTap: () => _showEditAccountSheet(context),
-              ),
-              const SizedBox(height: 12),
-              _buildActionTile(
-                icon: Icons.lock_outline,
-                label: 'Ubah Password',
-                subtitle: 'Ganti password akun',
-                onTap: () => context.push('/change-password'),
-              ),
-              const SizedBox(height: 24),
-              _buildLogoutButton(),
-              const SizedBox(height: 24),
-            ],
+      body: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(authProvider),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // Profile card
+                _buildProfileCard(user),
+                const SizedBox(height: 20),
+                // Action buttons
+                _buildActionTile(
+                  icon: Icons.person_outline,
+                  label: 'Ubah Akun',
+                  subtitle: 'Nomor HP & Email',
+                  onTap: () => _showEditAccountSheet(context),
+                ),
+                const SizedBox(height: 12),
+                _buildActionTile(
+                  icon: Icons.lock_outline,
+                  label: 'Ubah Password',
+                  subtitle: 'Ganti password akun',
+                  onTap: () => context.push('/change-password'),
+                ),
+                const SizedBox(height: 24),
+                _buildLogoutButton(),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
