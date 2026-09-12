@@ -44,7 +44,7 @@ class AppDrawer extends ConsumerWidget {
                     child: Center(
                       child: Text(
                         user?.resident?.fullName
-                                ?.substring(0, 1)
+                                .substring(0, 1)
                                 .toUpperCase() ??
                             'A',
                         style: const TextStyle(
