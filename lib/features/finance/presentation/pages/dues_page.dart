@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../data/models/due_model.dart';
 import '../../providers/finance_provider.dart';
 
@@ -159,7 +160,7 @@ class _DuesPageState extends ConsumerState<DuesPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  message,
+                  friendlyErrorMessage(message),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, color: AppColors.grey),
                 ),
