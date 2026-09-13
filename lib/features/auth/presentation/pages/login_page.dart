@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../providers/auth_provider.dart';
@@ -80,6 +81,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Column(
       children: [
         const SizedBox(height: 16),
+        SizedBox(
+          width: 140,
+          height: 140,
+          child: Lottie.asset(
+            'assets/lottie/searching-for-profile.json',
+            repeat: true,
+          ),
+        ),
         const Text(
           'Astina Smart Mobile',
           style: TextStyle(
