@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../sos/providers/sos_provider.dart';
@@ -40,10 +41,13 @@ class DashboardPage extends ConsumerWidget {
           heroTag: 'sos_fab',
           backgroundColor: AppColors.error,
           onPressed: () => _onSosPressed(context, ref),
-          child: const Icon(
-            Icons.warning_rounded,
-            size: 36,
-            color: Colors.white,
+          child: SizedBox(
+            width: 72,
+            height: 72,
+            child: Lottie.asset(
+              'assets/lottie/sos-animation.json',
+              repeat: true,
+            ),
           ),
         ),
       ),
