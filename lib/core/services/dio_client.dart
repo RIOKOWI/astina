@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
 import '../constants/api_constants.dart';
 import 'secure_storage.dart';
@@ -9,15 +10,20 @@ class DioClient {
   DioClient(this._storage) {
     _dio = Dio(_options);
     _dio.interceptors.add(_AuthInterceptor(_storage));
+    _dio.interceptors.add(_RetryInterceptor());
     _dio.interceptors.add(_ApiLoggingInterceptor());
   }
 
   final SecureStorageService _storage;
   late final Dio _dio;
+  static final int _timeoutMs =
+      int.tryParse(dotenv.env['API_TIMEOUT'] ?? '') ?? 90000;
+
   final _options = BaseOptions(
     baseUrl: ApiConstants.baseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
+    connectTimeout: Duration(milliseconds: _timeoutMs),
+    receiveTimeout: Duration(milliseconds: _timeoutMs),
+    sendTimeout: Duration(milliseconds: _timeoutMs),
     headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
   );
 
@@ -91,6 +97,63 @@ class _AuthInterceptor extends Interceptor {
   }
 }
 
+class _RetryInterceptor extends Interceptor {
+  static final int _retryCount =
+      int.tryParse(dotenv.env['API_RETRY'] ?? '') ?? 3;
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (_shouldRetry(err)) {
+      final extra = err.requestOptions.extra;
+      final attempt = (extra['_retry_count'] as int?) ?? 0;
+
+      if (attempt < _retryCount) {
+        final delay = Duration(milliseconds: (attempt + 1) * 1000);
+        err.requestOptions.extra['_retry_count'] = attempt + 1;
+
+        if (kDebugMode) {
+          _log.d(
+            '╠🔄 Retrying ($attempt + 1 / $_retryCount) in ${delay.inSeconds}s...',
+          );
+        }
+        await Future.delayed(delay);
+
+        try {
+          final dio = Dio();
+          final response = await dio.fetch(err.requestOptions);
+          handler.resolve(response);
+          return;
+        } catch (e) {
+          handler.next(e as DioException);
+          return;
+        }
+      }
+    }
+
+    handler.next(err);
+  }
+
+  bool _shouldRetry(DioException err) {
+    if (err.response != null) {
+      final status = err.response!.statusCode;
+      if (status != null && status >= 400 && status < 500) {
+        return false;
+      }
+    }
+
+    switch (err.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+      case DioExceptionType.unknown:
+        return true;
+      default:
+        return true;
+    }
+  }
+}
+
 const _sensitiveKeys = {
   'password',
   'password_confirmation',
@@ -146,6 +209,41 @@ String _prettyJson(dynamic data) {
     return const JsonEncoder.withIndent('  ').convert(decoded);
   } catch (_) {
     return data.toString();
+  }
+}
+
+String _errorType(DioException err) {
+  if (err.response != null) {
+    return 'HTTP ${err.response!.statusCode}';
+  }
+
+  final rawError = '${err.message ?? ''} ${err.error ?? ''}'.toLowerCase();
+
+  switch (err.type) {
+    case DioExceptionType.connectionTimeout:
+      return 'CONNECTION TIMEOUT';
+    case DioExceptionType.sendTimeout:
+      return 'SEND TIMEOUT';
+    case DioExceptionType.receiveTimeout:
+      return 'RECEIVE TIMEOUT';
+    case DioExceptionType.connectionError:
+      return 'CONNECTION ERROR (no response from server)';
+    case DioExceptionType.cancel:
+      return 'REQUEST CANCELLED';
+    case DioExceptionType.badCertificate:
+      return 'BAD CERTIFICATE';
+    case DioExceptionType.badResponse:
+      return 'BAD RESPONSE';
+    case DioExceptionType.transformTimeout:
+      return 'TRANSFORM TIMEOUT';
+    case DioExceptionType.unknown:
+      if (rawError.contains('handshake')) return 'HANDSHAKE ERROR (TLS/SSL)';
+      if (rawError.contains('socket') ||
+          rawError.contains('connection refused')) {
+        return 'NETWORK ERROR';
+      }
+      if (rawError.isEmpty) return 'UNKNOWN (DioExceptionType.unknown)';
+      return 'UNKNOWN';
   }
 }
 
@@ -259,10 +357,13 @@ class _ApiLoggingInterceptor extends Interceptor {
         ? '╠ Response:\n${_formatPayload(err.response?.data)}'
         : '';
 
+    final errType = _errorType(err);
+
     _log.e(
       '╔══ API ERROR ══════════════════════════════════════\n'
       '╠✕ $status $method $path ($duration ms)\n'
-      '╠ Error: ${err.message}\n'
+      '╠ Error: ${err.message ?? err.error ?? 'null'}\n'
+      '╠ Type: $errType\n'
       '$errData\n'
       '╚═══════════════════════════════════════════════════',
     );
