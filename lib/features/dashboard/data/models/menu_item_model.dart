@@ -165,12 +165,6 @@ abstract final class MenuConfig {
       roles: [UserRole.bendahara],
     ),
     MenuItemModel(
-      icon: Icons.payments_outlined,
-      label: 'Approval Pembayaran',
-      route: '/finance/payments/pending',
-      roles: [UserRole.bendahara],
-    ),
-    MenuItemModel(
       icon: Icons.warning_amber_outlined,
       label: 'SOS',
       route: '/sos',
