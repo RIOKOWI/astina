@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/router_refresh_notifier.dart';
+import '../services/app_lock_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/auth/presentation/pages/change_password_page.dart';
+import '../../features/auth/presentation/pages/app_lock_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/finance/presentation/pages/finance_page.dart';
 import '../../features/finance/presentation/pages/transactions_page.dart';
@@ -88,17 +90,46 @@ final appRouter = GoRouter(
     final authState = routerRefreshNotifier.state;
     final path = state.matchedLocation;
     final isLogin = path == '/login';
+    final isAppLock = path == '/app-lock';
 
-    if (authState == null) return null;
-
-    if (!authState.isAuthenticated && !isLogin) {
-      return '/login';
+    // Not authenticated
+    if (authState == null) {
+      if (!isLogin) {
+        return '/login';
+      }
+      return null;
     }
 
+    // Authenticated but on login page
     if (authState.isAuthenticated && isLogin) {
       return '/dashboard';
     }
 
+    // Check app lock state
+    final appLockState = appLockStateHolder.state;
+
+    // Not authenticated
+    if (!authState.isAuthenticated) {
+      if (!isLogin) {
+        return '/login';
+      }
+      return null;
+    }
+
+    // Authenticated but locked and not on app lock page
+    if (appLockState != null &&
+        appLockState.enabled &&
+        appLockState.locked &&
+        !isAppLock) {
+      return '/app-lock';
+    }
+
+    // Authenticated and unlocked, redirect from app lock page
+    if (isAppLock && (appLockState == null || !appLockState.locked)) {
+      return '/dashboard';
+    }
+
+    // Role-based access control
     final requiredRole = _getRequiredRole(path);
     if (requiredRole != null) {
       final currentRole = switch (authState.user?.primaryRoleCode) {
@@ -119,6 +150,17 @@ final appRouter = GoRouter(
       path: '/login',
       name: 'login',
       builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/app-lock',
+      name: 'app-lock',
+      builder: (context, state) => AppLockPage(
+        onUnlocked: () {
+          if (appLockStateHolder.state?.locked == false) {
+            context.go('/dashboard');
+          }
+        },
+      ),
     ),
     GoRoute(
       path: '/dashboard',
