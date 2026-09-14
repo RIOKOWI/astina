@@ -122,23 +122,6 @@ class AppDrawer extends ConsumerWidget {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: _DrawerItem(
-                icon: Icons.logout,
-                label: 'Keluar',
-                isActive: false,
-                color: AppColors.error,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showLogoutDialog(
-                    pageContext: context,
-                    ref: ref,
-                    onLoggedOut: () => GoRouter.of(context).go('/login'),
-                  );
-                },
-              ),
-            ),
           ],
         ),
       ),
@@ -162,35 +145,6 @@ class AppDrawer extends ConsumerWidget {
     }
   }
 
-  void _showLogoutDialog({
-    required BuildContext pageContext,
-    required WidgetRef ref,
-    required VoidCallback onLoggedOut,
-  }) {
-    showDialog(
-      context: pageContext,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Konfirmasi Keluar'),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await ref.read(authProvider.notifier).logout();
-              onLoggedOut();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Keluar'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _DrawerItem extends StatelessWidget {
@@ -198,19 +152,17 @@ class _DrawerItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.isActive,
-    this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
   final bool isActive;
-  final Color? color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = color ?? AppColors.primary;
+    final activeColor = AppColors.primary;
     final defaultColor = AppColors.dark.withValues(alpha: 0.55);
 
     return Padding(
