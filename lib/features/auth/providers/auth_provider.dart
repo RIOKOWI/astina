@@ -9,6 +9,7 @@ import '../../../core/services/secure_storage.dart';
 import '../../fcm/fcm_provider.dart';
 import '../data/datasources/auth_remote_data_source.dart';
 import '../data/models/user_model.dart';
+import 'app_lock_provider.dart';
 
 class AuthNotifier extends Notifier<AuthState> {
   @override
@@ -83,6 +84,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
     }
     await _storage.clearAll();
+    ref.read(appLockProvider.notifier).reset();
     _updateState(null);
     if (kDebugMode) developer.log('Auth: logged out', name: 'Auth');
   }
