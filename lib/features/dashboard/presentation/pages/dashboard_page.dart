@@ -180,20 +180,6 @@ class DashboardPage extends ConsumerWidget {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: _buildDrawerItem(
-                context,
-                icon: Icons.logout,
-                label: 'Keluar',
-                isActive: false,
-                color: AppColors.error,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showLogoutDialog(context, ref);
-                },
-              ),
-            ),
           ],
         ),
       ),
@@ -232,34 +218,6 @@ class DashboardPage extends ConsumerWidget {
             ? AppColors.primary.withValues(alpha: 0.08)
             : Colors.transparent,
         onTap: onTap,
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Konfirmasi Keluar'),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await ref.read(authProvider.notifier).logout();
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Keluar'),
-          ),
-        ],
       ),
     );
   }
