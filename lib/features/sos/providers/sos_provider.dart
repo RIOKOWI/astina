@@ -11,7 +11,11 @@ final sosRemoteDataSourceProvider = Provider<SosRemoteDataSource>((ref) {
 final sosActiveAlertsProvider = FutureProvider.autoDispose<List<SosAlertModel>>(
   (ref) async {
     final ds = ref.watch(sosRemoteDataSourceProvider);
-    return ds.getActiveAlerts();
+    final alerts = await ds.getActiveAlerts();
+    if (alerts.isEmpty && SosAudioService.instance.isPlaying) {
+      SosAudioService.instance.stopSiren();
+    }
+    return alerts;
   },
 );
 
