@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/injection/dependency_injection.dart';
@@ -32,15 +33,18 @@ class AuthNotifier extends Notifier<AuthState> {
       _updateState(user);
       registerFcmToken();
     } catch (e, st) {
+      final isUnauthorized = e is DioException && e.response?.statusCode == 401;
       if (kDebugMode) {
         developer.log(
-          'Auth init failed, clearing session',
+          'Auth init failed: $e${isUnauthorized ? ' (clearing session)' : ' (keeping session)'}',
           name: 'Auth',
           error: e,
           stackTrace: st,
         );
       }
-      await _storage.clearAll();
+      if (isUnauthorized) {
+        await _storage.clearAll();
+      }
       _updateState(null);
     }
   }
@@ -66,7 +70,6 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> logout() async {
     if (kDebugMode) developer.log('Auth: logout started', name: 'Auth');
-    await revokeFcmToken();
     try {
       await _ds.logout();
     } catch (e, st) {
