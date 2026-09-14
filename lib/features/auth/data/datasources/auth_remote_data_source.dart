@@ -44,7 +44,7 @@ class AuthRemoteDataSource {
       }
       return (token, user);
     } on DioException catch (e) {
-      _handleDioError(e);
+      _handleDioError(e, isLoginEndpoint: true);
     }
   }
 
@@ -158,11 +158,17 @@ class AuthRemoteDataSource {
     }
   }
 
-  Never _handleDioError(DioException e) {
+  Never _handleDioError(DioException e, {bool isLoginEndpoint = false}) {
     final statusCode = e.response?.statusCode;
     final data = e.response?.data;
 
     if (statusCode == 401) {
+      if (isLoginEndpoint && data is Map<String, dynamic>) {
+        throw ApiException(
+          data['message'] as String? ?? 'Login gagal.',
+          statusCode: 401,
+        );
+      }
       throw const ApiException(
         'Sesi habis. Silakan login ulang.',
         statusCode: 401,
