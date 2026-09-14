@@ -337,7 +337,7 @@ class _MyResidentPageState extends ConsumerState<MyResidentPage> {
               DropdownMenuItem(value: 'katolik', child: Text('Katolik')),
               DropdownMenuItem(value: 'hindu', child: Text('Hindu')),
               DropdownMenuItem(value: 'buddha', child: Text('Buddha')),
-              DropdownMenuItem(value: 'konghucu', child: Text('Konghucu')),
+              DropdownMenuItem(value: 'khonghucu', child: Text('Konghucu')),
             ],
             onChanged: (v) => setState(() => _religion = v),
           ),
