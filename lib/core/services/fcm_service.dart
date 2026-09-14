@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'notification_display_service.dart';
 
 typedef FcmMessageHandler = void Function(RemoteMessage message);
 
@@ -38,13 +39,14 @@ class FCMService {
   }
 
   void _listenForeground() {
-    FirebaseMessaging.onMessage.listen((message) {
+    FirebaseMessaging.onMessage.listen((message) async {
       if (kDebugMode) {
         developer.log(
           'FCM foreground: ${message.notification?.title}',
           name: 'FCM',
         );
       }
+      await NotificationDisplayService.instance.showFromFcm(message);
       _dispatch(message);
     });
   }
