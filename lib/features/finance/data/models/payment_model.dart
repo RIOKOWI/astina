@@ -49,7 +49,7 @@ class PaymentModel {
       resident: resident,
       amount: json['amount'] as int,
       method: json['method'] as String? ?? '-',
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'unknown',
       paidAt: json['paid_at'] != null
           ? DateTime.parse(json['paid_at'] as String)
           : null,
@@ -103,8 +103,8 @@ class DueBill {
       dueId: json['due_id'] as int? ?? due?.id,
       due: due,
       amount: json['amount'] as int,
-      dueDate: json['due_date'] as String,
-      status: json['status'] as String,
+      dueDate: json['due_date'] as String? ?? '-',
+      status: json['status'] as String? ?? 'unknown',
     );
   }
 }
@@ -127,7 +127,7 @@ class DueInfo {
   factory DueInfo.fromJson(Map<String, dynamic> json) {
     return DueInfo(
       id: json['id'] as int,
-      name: json['name'] as String,
+      name: json['name'] as String? ?? 'Iuran',
       amount: json['amount'] as int,
       frequency: json['frequency'] as String?,
       isActive: json['is_active'] as bool?,
@@ -151,12 +151,12 @@ class Resident {
 
 class Approver {
   final int id;
-  final String name;
+  final String? name;
 
-  const Approver({required this.id, required this.name});
+  const Approver({required this.id, this.name});
 
   factory Approver.fromJson(Map<String, dynamic> json) {
-    return Approver(id: json['id'] as int, name: json['name'] as String);
+    return Approver(id: json['id'] as int, name: json['name'] as String?);
   }
 }
 
@@ -183,9 +183,9 @@ class PaymentProof {
     return PaymentProof(
       id: json['id'] as int,
       paymentId: json['payment_id'] as int,
-      url: json['url'] as String,
-      fileName: json['file_name'] as String,
-      mimeType: json['mime_type'] as String,
+      url: json['url'] as String? ?? '',
+      fileName: json['file_name'] as String? ?? '',
+      mimeType: json['mime_type'] as String? ?? '',
       fileSize: json['file_size'] as int?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
