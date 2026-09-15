@@ -562,3 +562,105 @@ final paymentDetailProvider = FutureProvider.autoDispose
     .family<PaymentModel, int>((ref, id) async {
       return ref.watch(financeRemoteDataSourceProvider).getPayment(id);
     });
+
+// --- Bendahara: All Payments (paginated) ---
+class AllPaymentsState {
+  const AllPaymentsState({
+    this.payments = const [],
+    this.isLoading = false,
+    this.hasMore = true,
+    this.currentPage = 1,
+    this.total = 0,
+    this.error,
+    this.statusFilter = 'all',
+  });
+
+  final List<PaymentModel> payments;
+  final bool isLoading;
+  final bool hasMore;
+  final int currentPage;
+  final int total;
+  final String? error;
+  final String statusFilter;
+
+  AllPaymentsState copyWith({
+    List<PaymentModel>? payments,
+    bool? isLoading,
+    bool? hasMore,
+    int? currentPage,
+    int? total,
+    String? error,
+    String? statusFilter,
+  }) {
+    return AllPaymentsState(
+      payments: payments ?? this.payments,
+      isLoading: isLoading ?? this.isLoading,
+      hasMore: hasMore ?? this.hasMore,
+      currentPage: currentPage ?? this.currentPage,
+      total: total ?? this.total,
+      error: error,
+      statusFilter: statusFilter ?? this.statusFilter,
+    );
+  }
+}
+
+class AllPaymentsNotifier extends Notifier<AllPaymentsState> {
+  @override
+  AllPaymentsState build() => const AllPaymentsState();
+
+  Future<void> load({String status = 'all'}) async {
+    state = state.copyWith(isLoading: true, error: null, statusFilter: status);
+    try {
+      final ds = ref.read(financeRemoteDataSourceProvider);
+      final (list, meta) = await ds.getAllPayments(
+        page: 1,
+        status: status == 'all' ? null : status,
+      );
+      state = state.copyWith(
+        payments: list,
+        isLoading: false,
+        hasMore: (meta['last_page'] as int? ?? 1) > 1,
+        currentPage: 1,
+        total: meta['total'] as int? ?? list.length,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || !state.hasMore) return;
+    state = state.copyWith(isLoading: true);
+    try {
+      final ds = ref.read(financeRemoteDataSourceProvider);
+      final nextPage = state.currentPage + 1;
+      final (list, meta) = await ds.getAllPayments(
+        page: nextPage,
+        status: state.statusFilter == 'all' ? null : state.statusFilter,
+      );
+      state = state.copyWith(
+        payments: [...state.payments, ...list],
+        isLoading: false,
+        hasMore: (meta['last_page'] as int? ?? 1) > nextPage,
+        currentPage: nextPage,
+        total: meta['total'] as int? ?? state.total,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  void updatePayment(PaymentModel updated) {
+    state = state.copyWith(
+      payments: state.payments.map((p) {
+        if (p.id == updated.id) return updated;
+        return p;
+      }).toList(),
+    );
+  }
+}
+
+final allPaymentsProvider =
+    NotifierProvider<AllPaymentsNotifier, AllPaymentsState>(
+      AllPaymentsNotifier.new,
+    );
