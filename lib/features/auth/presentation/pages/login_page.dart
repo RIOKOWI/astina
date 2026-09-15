@@ -64,10 +64,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo / Title
                 _buildLogo(),
                 const SizedBox(height: 40),
-                // Login Form Card
                 _buildFormCard(),
               ],
             ),
@@ -144,7 +142,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            // Phone field
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
@@ -164,7 +161,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               },
             ),
             const SizedBox(height: 16),
-            // Password field
             TextFormField(
               controller: _passwordController,
               obscureText: _obscurePassword,
@@ -195,7 +191,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 return null;
               },
             ),
-            // Error message
             if (_errorMessage != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -229,7 +224,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
             ],
             const SizedBox(height: 24),
-            // Login button
             _buildLoginButton(),
           ],
         ),
