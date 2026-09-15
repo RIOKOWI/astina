@@ -85,6 +85,27 @@ class FinanceRemoteDataSource {
     return FinanceTransaction.fromJson(data['data'] as Map<String, dynamic>);
   }
 
+  Future<(List<PaymentModel>, Map<String, dynamic>)> getAllPayments({
+    int page = 1,
+    int perPage = 15,
+    String? status,
+  }) async {
+    final response = await _client.get(
+      ApiConstants.payments,
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        if (status != null && status.isNotEmpty) 'status': status,
+      },
+    );
+    final data = response.data as Map<String, dynamic>;
+    final list = _paginatedItems(
+      data,
+    ).map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
+    final meta = _paginationMeta(data);
+    return (list, meta);
+  }
+
   Future<(List<PaymentModel>, Map<String, dynamic>)> getPendingPayments({
     int page = 1,
     int perPage = 15,
