@@ -6,7 +6,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/app_lock_provider.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -54,8 +53,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   subtitle: 'Ganti password akun',
                   onTap: () => context.push('/change-password'),
                 ),
-                const SizedBox(height: 24),
-                _buildSecuritySection(),
                 const SizedBox(height: 24),
                 _buildLogoutButton(),
                 const SizedBox(height: 24),
@@ -238,148 +235,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
       ),
     );
-  }
-
-  Widget _buildSecuritySection() {
-    final appLockState = ref.watch(appLockProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            'Keamanan',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.dark,
-            ),
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.dark.withValues(alpha: 0.05)),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.dark.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.fingerprint, color: AppColors.primary),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Kunci Aplikasi',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.dark,
-                      ),
-                    ),
-                    Text(
-                      appLockState.enabled
-                          ? 'Sidik jari atau PIN perangkat diperlukan saat membuka ASTINA.'
-                          : 'Gunakan sidik jari atau PIN perangkat untuk melindungi ASTINA.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.dark.withValues(alpha: 0.50),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: appLockState.enabled,
-                onChanged: appLockState.authenticating
-                    ? null
-                    : (value) => _toggleAppLock(value),
-                activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
-                thumbColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return AppColors.primary;
-                  }
-                  return Colors.grey;
-                }),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _toggleAppLock(bool enable) async {
-    final appLockNotifier = ref.read(appLockProvider.notifier);
-
-    if (enable) {
-      // Check if device can use biometric
-      final canUse = await appLockNotifier.checkCanUse();
-      if (!canUse && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Perangkat tidak mendukung atau belum mengatur kunci layar. '
-              'Atur PIN, pola, atau sidik jari di pengaturan perangkat terlebih dahulu.',
-            ),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 4),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-        return;
-      }
-
-      final success = await appLockNotifier.enable();
-      if (!success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Gagal mengaktifkan Kunci Aplikasi.'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } else {
-      final success = await appLockNotifier.disable();
-      if (!success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Gagal menonaktifkan Kunci Aplikasi.'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    }
   }
 
   Widget _buildLogoutButton() {
