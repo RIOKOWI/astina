@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/router_refresh_notifier.dart';
-import '../services/app_lock_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/auth/presentation/pages/change_password_page.dart';
-import '../../features/auth/presentation/pages/app_lock_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/finance/presentation/pages/finance_page.dart';
 import '../../features/finance/presentation/pages/transactions_page.dart';
@@ -92,10 +90,9 @@ final appRouter = GoRouter(
     final authState = routerRefreshNotifier.state;
     final path = state.matchedLocation;
     final isLogin = path == '/login';
-    final isAppLock = path == '/app-lock';
 
     // Not authenticated
-    if (authState == null) {
+    if (!authState.isAuthenticated) {
       if (!isLogin) {
         return '/login';
       }
@@ -104,28 +101,6 @@ final appRouter = GoRouter(
 
     // Authenticated but on login page
     if (authState.isAuthenticated && isLogin) {
-      return '/dashboard';
-    }
-
-    // Check app lock state
-    final appLockState = appLockStateHolder.state;
-
-    // If authenticated but app lock not yet initialized, wait for it (prevents
-    // redirecting to /login on cold start before appLockState arrives).
-    if (authState.isAuthenticated && appLockState == null) {
-      return null;
-    }
-
-    // Authenticated but locked and not on app lock page
-    if (appLockState != null &&
-        appLockState.enabled &&
-        appLockState.locked &&
-        !isAppLock) {
-      return '/app-lock';
-    }
-
-    // Authenticated and unlocked, redirect from app lock page
-    if (isAppLock && (appLockState == null || !appLockState.locked)) {
       return '/dashboard';
     }
 
@@ -150,20 +125,6 @@ final appRouter = GoRouter(
       path: '/login',
       name: 'login',
       builder: (context, state) => const LoginPage(),
-    ),
-    GoRoute(
-      path: '/app-lock',
-      name: 'app-lock',
-      builder: (context, state) => AppLockPage(
-        onUnlocked: () {
-          if (appLockStateHolder.state?.locked == false) {
-            context.go('/dashboard');
-          }
-        },
-        onSessionInvalid: () {
-          routerRefreshNotifier.update(null);
-        },
-      ),
     ),
     GoRoute(
       path: '/dashboard',
