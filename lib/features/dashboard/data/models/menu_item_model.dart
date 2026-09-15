@@ -165,6 +165,12 @@ abstract final class MenuConfig {
       roles: [UserRole.bendahara],
     ),
     MenuItemModel(
+      icon: Icons.history,
+      label: 'Riwayat Pembayaran',
+      route: '/finance/payments/history',
+      roles: [UserRole.bendahara],
+    ),
+    MenuItemModel(
       icon: Icons.warning_amber_outlined,
       label: 'SOS',
       route: '/sos',
