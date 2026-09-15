@@ -304,6 +304,11 @@ class _FinancePageState extends ConsumerState<FinancePage> {
         'Approval Pembayaran',
         '/finance/payments/pending',
       ));
+      items.add((
+        Icons.history,
+        'Riwayat Pembayaran',
+        '/finance/payments/history',
+      ));
     }
 
     if (role == UserRole.warga) {
