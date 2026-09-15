@@ -12,6 +12,7 @@ import '../../features/finance/presentation/pages/finance_page.dart';
 import '../../features/finance/presentation/pages/transactions_page.dart';
 import '../../features/finance/presentation/pages/transaction_form_page.dart';
 import '../../features/finance/presentation/pages/pending_payments_page.dart';
+import '../../features/finance/presentation/pages/all_payments_page.dart';
 import '../../features/finance/presentation/pages/dues_page.dart';
 import '../../features/finance/presentation/pages/due_detail_page.dart';
 import '../../features/finance/presentation/pages/my_due_bills_page.dart';
@@ -61,6 +62,7 @@ final _restrictedRoutes = {
   '/finance/transactions/create': [UserRole.rt, UserRole.bendahara],
   '/finance/dues': [UserRole.rt],
   '/finance/payments/pending': [UserRole.bendahara],
+  '/finance/payments/history': [UserRole.bendahara],
   '/complaints/create': [UserRole.warga],
   '/letters/create': [UserRole.warga],
   '/letters/pending': [UserRole.rt],
@@ -289,6 +291,11 @@ final appRouter = GoRouter(
       path: '/finance/payments/pending',
       name: 'finance-payments-pending',
       builder: (context, state) => const PendingPaymentsPage(),
+    ),
+    GoRoute(
+      path: '/finance/payments/history',
+      name: 'finance-payments-history',
+      builder: (context, state) => const AllPaymentsPage(),
     ),
     GoRoute(
       path: '/finance/payments/:id',
