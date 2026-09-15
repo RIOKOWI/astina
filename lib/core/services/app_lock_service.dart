@@ -2,6 +2,18 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/foundation.dart';
 
+enum BiometricAuthResult {
+  success,
+  failed,
+  cancelled,
+  notAvailable,
+  notEnrolled,
+  lockedOut,
+  permanentlyLockedOut,
+  passcodeNotSet,
+  error,
+}
+
 class AppLockService {
   AppLockService() : _localAuth = LocalAuthentication();
 
@@ -14,7 +26,6 @@ class AppLockService {
   bool get isLocked => _isLocked;
   bool get isAuthenticating => _isAuthenticating;
 
-  /// Must be called before using authenticate() to initialize locked state.
   void initialize({required bool appLockEnabled}) {
     _isLocked = appLockEnabled;
     if (kDebugMode) {
@@ -43,12 +54,8 @@ class AppLockService {
     }
   }
 
-  /// Returns friendly error message or null if user cancelled.
-  Future<String?> authenticate({
-    required void Function() onSuccess,
-    required void Function(String message) onError,
-  }) async {
-    if (_isAuthenticating) return null;
+  Future<BiometricAuthResult> authenticate() async {
+    if (_isAuthenticating) return BiometricAuthResult.cancelled;
 
     _isAuthenticating = true;
 
@@ -57,7 +64,7 @@ class AppLockService {
         localizedReason: 'Verifikasi identitas Anda untuk melanjutkan.',
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
         ),
       );
 
@@ -65,35 +72,27 @@ class AppLockService {
         _isLocked = false;
         _backgroundTimestamp = null;
         if (kDebugMode) debugPrint('[APP_LOCK] authentication success');
-        onSuccess();
-        return null;
+        return BiometricAuthResult.success;
       } else {
         if (kDebugMode) debugPrint('[APP_LOCK] authentication failed');
-        onError('Verifikasi gagal. Silakan coba kembali.');
-        return 'Verifikasi gagal. Silakan coba kembali.';
+        return BiometricAuthResult.failed;
       }
     } on PlatformException catch (e) {
-      final message = _mapPlatformException(e);
-      if (kDebugMode) debugPrint('[APP_LOCK] authentication error: $message');
-      onError(message);
-      return message;
+      if (kDebugMode) debugPrint('[APP_LOCK] PlatformException: ${e.code}');
+      return _mapPlatformException(e);
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('[APP_LOCK] authentication unexpected error: $e');
-      onError('Verifikasi gagal. Silakan coba kembali.');
-      return 'Verifikasi gagal. Silakan coba kembali.';
+      if (kDebugMode) debugPrint('[APP_LOCK] unexpected error: $e');
+      return BiometricAuthResult.error;
     } finally {
       _isAuthenticating = false;
     }
   }
 
-  /// Call when app goes to background.
   void onBackground() {
     _backgroundTimestamp = DateTime.now();
     if (kDebugMode) debugPrint('[APP_LOCK] background timestamp recorded');
   }
 
-  /// Call when app resumes. Returns true if should lock.
   bool onForeground() {
     if (_backgroundTimestamp == null) {
       if (kDebugMode)
@@ -106,7 +105,7 @@ class AppLockService {
 
     if (kDebugMode) {
       debugPrint(
-        '[APP_LOCK] foreground after ${elapsed.inSeconds}s, shouldLock=$shouldLock',
+        '[APP_LOCK] foreground after ${elapsed.inSeconds}s, locking=$shouldLock',
       );
     }
 
@@ -130,27 +129,27 @@ class AppLockService {
     if (kDebugMode) debugPrint('[APP_LOCK] unlocked');
   }
 
-  String _mapPlatformException(PlatformException e) {
+  BiometricAuthResult _mapPlatformException(PlatformException e) {
     if (kDebugMode) {
-      debugPrint('[APP_LOCK] PlatformException code: ${e.code}, message: ${e.message}');
+      debugPrint('[APP_LOCK] PlatformException code: ${e.code}');
     }
     switch (e.code) {
       case 'NotAvailable':
-        return 'Autentikasi tidak tersedia di perangkat ini.';
+        return BiometricAuthResult.notAvailable;
       case 'NotEnrolled':
-        return 'Atur PIN, pola, kata sandi, atau sidik jari pada pengaturan perangkat terlebih dahulu.';
+        return BiometricAuthResult.notEnrolled;
       case 'LockedOut':
-        return 'Terlalu banyak percobaan. Coba kembali beberapa saat lagi.';
+        return BiometricAuthResult.lockedOut;
       case 'PermanentlyLockedOut':
-        return 'Autentikasi dinonaktifkan. Atur ulang keamanan perangkat.';
+        return BiometricAuthResult.permanentlyLockedOut;
       case 'PasscodeNotSet':
-        return 'Atur PIN, pola, kata sandi, atau sidik jari pada pengaturan perangkat terlebih dahulu.';
+        return BiometricAuthResult.passcodeNotSet;
       default:
         final msg = e.message?.toLowerCase() ?? '';
         if (msg.contains('cancel') || msg.contains('cancelled')) {
-          return '';
+          return BiometricAuthResult.cancelled;
         }
-        return 'Verifikasi gagal. Silakan coba kembali.';
+        return BiometricAuthResult.error;
     }
   }
 }
