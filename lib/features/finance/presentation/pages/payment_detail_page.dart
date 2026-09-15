@@ -77,7 +77,7 @@ class _PaymentDetailPageState extends ConsumerState<PaymentDetailPage> {
                   value: _formatDate(payment.approvedAt),
                 ),
               if (payment.approver != null)
-                _InfoRow(label: 'Oleh', value: payment.approver!.name),
+                _InfoRow(label: 'Oleh', value: payment.approver!.name ?? '-'),
               if (payment.rejectionReason != null)
                 _InfoRow(
                   label: 'Alasan ditolak',
