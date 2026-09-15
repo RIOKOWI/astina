@@ -87,8 +87,6 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
               ),
               const SizedBox(width: 12),
               Expanded(child: _methodCard('cash', 'Tunai', Icons.payments)),
-              const SizedBox(width: 12),
-              Expanded(child: _methodCard('qris', 'QRIS', Icons.qr_code)),
             ],
           ),
           const SizedBox(height: 24),
