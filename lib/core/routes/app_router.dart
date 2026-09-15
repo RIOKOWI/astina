@@ -108,11 +108,9 @@ final appRouter = GoRouter(
     // Check app lock state
     final appLockState = appLockStateHolder.state;
 
-    // Not authenticated
-    if (!authState.isAuthenticated) {
-      if (!isLogin) {
-        return '/login';
-      }
+    // If authenticated but app lock not yet initialized, wait for it (prevents
+    // redirecting to /login on cold start before appLockState arrives).
+    if (authState.isAuthenticated && appLockState == null) {
       return null;
     }
 
@@ -159,6 +157,9 @@ final appRouter = GoRouter(
           if (appLockStateHolder.state?.locked == false) {
             context.go('/dashboard');
           }
+        },
+        onSessionInvalid: () {
+          routerRefreshNotifier.update(null);
         },
       ),
     ),
