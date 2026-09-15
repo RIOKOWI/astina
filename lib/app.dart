@@ -8,7 +8,6 @@ import 'features/fcm/fcm_provider.dart';
 import 'features/sos/services/sos_audio_service.dart';
 import 'features/sos/data/datasources/sos_remote_data_source.dart';
 import 'core/injection/dependency_injection.dart';
-import 'features/auth/providers/app_lock_provider.dart';
 
 class AstinaApp extends ConsumerStatefulWidget {
   const AstinaApp({super.key});
@@ -34,22 +33,7 @@ class _AstinaAppState extends ConsumerState<AstinaApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-        ref.read(appLockProvider.notifier).onBackground();
-        break;
-      case AppLifecycleState.resumed:
-        _handleResumed();
-        break;
-      default:
-        break;
-    }
     _checkSosAndStopSiren();
-  }
-
-  void _handleResumed() {
-    ref.read(appLockProvider.notifier).checkForegroundLock();
   }
 
   Future<void> _checkSosAndStopSiren() async {
