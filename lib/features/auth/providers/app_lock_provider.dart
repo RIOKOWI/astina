@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/app_lock_service.dart';
@@ -6,9 +6,31 @@ import '../../../core/services/secure_storage.dart';
 import '../../../core/services/app_lock_state.dart';
 import '../../../core/injection/dependency_injection.dart';
 
+enum AppLockAuthStatus {
+  success,
+  sessionInvalid,
+  networkError,
+  biometricFailed,
+  biometricCancelled,
+  biometricNotAvailable,
+  biometricNotEnrolled,
+  biometricLockedOut,
+  biometricPermanentlyLocked,
+  biometricPasscodeNotSet,
+  error,
+}
+
+class AppLockAuthResult {
+  final AppLockAuthStatus status;
+  final String? message;
+
+  const AppLockAuthResult({required this.status, this.message});
+}
+
 class AppLockNotifier extends Notifier<AppLockState> {
   late final AppLockService _service;
   late final SecureStorageService _storage;
+
   static const _appLockKey = 'app_lock_enabled';
 
   @override
@@ -50,15 +72,11 @@ class AppLockNotifier extends Notifier<AppLockState> {
     await _storage.delete(_appLockKey);
   }
 
-  /// Enable app lock - requires successful authentication first.
   Future<bool> enable() async {
     if (state.authenticating) return false;
 
-    // Check if device can authenticate first
     final canAuth = await _service.canAuthenticate();
-    if (!canAuth) {
-      return false;
-    }
+    if (!canAuth) return false;
 
     state = state.copyWith(authenticating: true);
     _notifyState();
@@ -72,14 +90,11 @@ class AppLockNotifier extends Notifier<AppLockState> {
     );
     _notifyState();
 
-    if (success) {
-      _service.unlock();
-    }
+    if (success) _service.unlock();
 
     return success;
   }
 
-  /// Disable app lock - requires successful authentication first.
   Future<bool> disable() async {
     if (state.authenticating) return false;
 
@@ -95,94 +110,137 @@ class AppLockNotifier extends Notifier<AppLockState> {
     );
     _notifyState();
 
-    if (success) {
-      _service.unlock();
-    }
+    if (success) _service.unlock();
 
     return success;
   }
 
-  /// Returns true if auth succeeded.
   Future<bool> _authenticateAndSave({required bool enabled}) async {
-    final completer = Completer<bool>();
-
-    await _service.authenticate(
-      onSuccess: () {
-        if (!completer.isCompleted) {
-          completer.complete(true);
-        }
-      },
-      onError: (msg) {
-        if (!completer.isCompleted && msg.isNotEmpty) {
-          completer.complete(false);
-        }
-      },
-    );
-
-    final result = await completer.future.timeout(
-      const Duration(seconds: 30),
-      onTimeout: () => false,
-    );
-
-    if (result) {
+    final result = await _service.authenticate();
+    if (result == BiometricAuthResult.success) {
       await _setAppLockEnabled(enabled);
-      if (kDebugMode) {
+      if (kDebugMode)
         debugPrint('[APP_LOCK] ${enabled ? 'enabled' : 'disabled'}');
-      }
+      return true;
     }
-
-    return result;
+    return false;
   }
 
-  /// Authenticate to unlock. Called when user taps "Buka ASTINA".
-  Future<String?> authenticate() async {
-    if (!state.enabled) return null;
+  Future<AppLockAuthResult> authenticate() async {
+    if (!state.enabled) {
+      return const AppLockAuthResult(status: AppLockAuthStatus.success);
+    }
 
     state = state.copyWith(authenticating: true);
     _notifyState();
 
-    final completer = Completer<String?>();
+    final biometricResult = await _service.authenticate();
 
-    await _service.authenticate(
-      onSuccess: () {
-        if (!completer.isCompleted) {
-          completer.complete(null);
-        }
-      },
-      onError: (msg) {
-        if (!completer.isCompleted) {
-          completer.complete(msg);
-        }
-      },
-    );
+    if (biometricResult == BiometricAuthResult.success) {
+      final sessionResult = await _validateBackendSession();
+      state = state.copyWith(authenticating: false);
+      _notifyState();
 
-    final result = await completer.future.timeout(
-      const Duration(seconds: 30),
-      onTimeout: () => 'Verifikasi gagal. Silakan coba kembali.',
-    );
-
-    state = state.copyWith(locked: result != null, authenticating: false);
-    _notifyState();
-
-    if (result == null) {
-      _service.unlock();
+      if (sessionResult.status == AppLockAuthStatus.success) {
+        _service.unlock();
+        return sessionResult;
+      }
+      return sessionResult;
     }
 
-    return result;
+    state = state.copyWith(locked: true, authenticating: false);
+    _notifyState();
+
+    return _mapBiometricToAuthResult(biometricResult);
   }
 
-  /// Called by app.dart when app goes to background.
+  Future<AppLockAuthResult> _validateBackendSession() async {
+    try {
+      final ds = ref.read(authRemoteDataSourceProvider);
+      await ds.getMe();
+      if (kDebugMode) debugPrint('[APP_LOCK] backend session valid');
+      return const AppLockAuthResult(status: AppLockAuthStatus.success);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        if (kDebugMode) debugPrint('[APP_LOCK] backend session invalid (401)');
+        await _storage.clearAll();
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.sessionInvalid,
+          message: 'Sesi habis. Silakan login ulang.',
+        );
+      }
+      if (kDebugMode) debugPrint('[APP_LOCK] network error: ${e.type}');
+      return const AppLockAuthResult(
+        status: AppLockAuthStatus.networkError,
+        message: 'Tidak dapat terhubung ke server.',
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('[APP_LOCK] session validation error: $e');
+      return const AppLockAuthResult(
+        status: AppLockAuthStatus.networkError,
+        message: 'Tidak dapat terhubung ke server.',
+      );
+    }
+  }
+
+  AppLockAuthResult _mapBiometricToAuthResult(BiometricAuthResult result) {
+    switch (result) {
+      case BiometricAuthResult.success:
+        return const AppLockAuthResult(status: AppLockAuthStatus.success);
+      case BiometricAuthResult.failed:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.biometricFailed,
+          message: 'Verifikasi gagal. Silakan coba kembali.',
+        );
+      case BiometricAuthResult.cancelled:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.biometricCancelled,
+          message: null,
+        );
+      case BiometricAuthResult.notAvailable:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.biometricNotAvailable,
+          message: 'Autentikasi tidak tersedia di perangkat ini.',
+        );
+      case BiometricAuthResult.notEnrolled:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.biometricNotEnrolled,
+          message:
+              'Biometrik belum dikonfigurasi. Tambahkan fingerprint atau Face ID di pengaturan perangkat.',
+        );
+      case BiometricAuthResult.lockedOut:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.biometricLockedOut,
+          message:
+              'Autentikasi biometrik sementara dikunci. Coba kembali beberapa saat lagi.',
+        );
+      case BiometricAuthResult.permanentlyLockedOut:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.biometricPermanentlyLocked,
+          message: 'Autentikasi dinonaktifkan. Atur ulang keamanan perangkat.',
+        );
+      case BiometricAuthResult.passcodeNotSet:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.biometricPasscodeNotSet,
+          message:
+              'Atur PIN, pola, kata sandi, atau sidik jari di pengaturan perangkat.',
+        );
+      case BiometricAuthResult.error:
+        return const AppLockAuthResult(
+          status: AppLockAuthStatus.error,
+          message: 'Verifikasi gagal. Silakan coba kembali.',
+        );
+    }
+  }
+
   void onBackground() {
     _service.onBackground();
   }
 
-  /// Called by app.dart when app comes to foreground.
-  /// Returns true if app should be locked.
   bool onForeground() {
     return _service.onForeground();
   }
 
-  /// Check and apply foreground lock if needed.
   void checkForegroundLock() {
     if (state.enabled && !state.locked) {
       final shouldLock = _service.onForeground();
@@ -193,7 +251,6 @@ class AppLockNotifier extends Notifier<AppLockState> {
     }
   }
 
-  /// Called by auth logout to reset app lock state.
   void reset() {
     _resetAppLockEnabled();
     _service.unlock();
@@ -201,16 +258,21 @@ class AppLockNotifier extends Notifier<AppLockState> {
     _notifyState();
   }
 
-  /// Refresh capability check (e.g., after returning from device settings).
   Future<void> refreshCapability() async {
     final canUse = await _service.canAuthenticate();
     state = state.copyWith(canUseBiometric: canUse);
     _notifyState();
   }
 
-  /// Check if device can use biometric/lock screen authentication.
   Future<bool> checkCanUse() async {
     return _service.canAuthenticate();
+  }
+
+  Future<void> clearSessionAndGoToLogin() async {
+    await _storage.clearAll();
+    _service.unlock();
+    state = const AppLockState();
+    _notifyState();
   }
 }
 
