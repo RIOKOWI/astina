@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/router_refresh_notifier.dart';
-import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/auth/presentation/pages/change_password_page.dart';
@@ -51,76 +50,43 @@ import '../../features/dashboard/presentation/pages/activity_form_page.dart';
 import '../../features/dashboard/presentation/pages/attachment_viewer_page.dart';
 import '../../features/dashboard/data/models/activity_model.dart';
 
-final _restrictedRoutes = {
-  '/residents': [UserRole.rt],
-  '/households': [UserRole.rt],
-  '/users': [UserRole.rt],
-  '/activities/create': [UserRole.rt],
-  '/inventory': [UserRole.rt],
-  '/finance/transactions/create': [UserRole.rt, UserRole.bendahara],
-  '/finance/dues': [UserRole.rt],
-  '/finance/payments/pending': [UserRole.bendahara],
-  '/finance/payments/history': [UserRole.bendahara],
-  '/complaints/create': [UserRole.warga],
-  '/letters/create': [UserRole.warga],
-  '/letters/pending': [UserRole.rt],
-};
-
-UserRole? _getRequiredRole(String path) {
-  for (final entry in _restrictedRoutes.entries) {
-    if (path == entry.key || path.startsWith('${entry.key}/')) {
-      return entry.value.first;
-    }
-  }
-  return null;
-}
-
-bool _isRouteAllowed(String path, UserRole currentRole) {
-  final allowed = _restrictedRoutes.entries
-      .where((e) => path == e.key || path.startsWith('${e.key}/'))
-      .expand((e) => e.value)
-      .toList();
-  return allowed.contains(currentRole);
-}
-
 final appRouter = GoRouter(
-  initialLocation: '/dashboard',
+  initialLocation: '/splash',
   refreshListenable: routerRefreshNotifier,
   redirect: (context, state) {
     final authState = routerRefreshNotifier.state;
     final path = state.matchedLocation;
     final isLogin = path == '/login';
+    final isSplash = path == '/splash';
 
-    // Not authenticated
-    if (!authState.isAuthenticated) {
-      if (!isLogin) {
-        return '/login';
-      }
+    if (authState.isLoading) {
+      if (!isSplash) return '/splash';
       return null;
     }
 
-    // Authenticated but on login page
-    if (authState.isAuthenticated && isLogin) {
-      return '/dashboard';
+    if (!authState.isAuthenticated) {
+      if (!isLogin) return '/login';
+      return null;
     }
 
-    // Role-based access control
-    final requiredRole = _getRequiredRole(path);
-    if (requiredRole != null) {
-      final currentRole = switch (authState.user?.primaryRoleCode) {
-        'rt' => UserRole.rt,
-        'bendahara' => UserRole.bendahara,
-        'warga' => UserRole.warga,
-        _ => UserRole.unknown,
-      };
-      if (!_isRouteAllowed(path, currentRole)) {
-        return '/dashboard';
-      }
+    if (authState.isAuthenticated) {
+      if (isLogin) return '/dashboard';
+      if (isSplash) return '/dashboard';
+      return null;
     }
 
     return null;
   },
   routes: [
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      builder: (context, state) => const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    ),
     GoRoute(
       path: '/login',
       name: 'login',
