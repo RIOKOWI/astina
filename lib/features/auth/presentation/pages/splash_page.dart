@@ -54,9 +54,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
             SizedBox(
               width: 120,
               height: 120,
-              child: Lottie.asset(
-                'assets/lottie/searching-for-profile.json',
-                repeat: true,
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/img/claymorph-logo-rt.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -64,10 +66,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
             const SizedBox(height: 16),
             const Text(
               'Memverifikasi...',
-              style: TextStyle(
-                color: AppColors.dark,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppColors.dark, fontSize: 14),
             ),
           ],
         ),
