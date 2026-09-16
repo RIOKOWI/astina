@@ -28,7 +28,7 @@ class NotificationDisplayService {
     const initSettings = InitializationSettings(android: androidSettings);
 
     await _plugin.initialize(
-      settings: initSettings,
+      initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
@@ -105,10 +105,10 @@ class NotificationDisplayService {
     );
 
     await _plugin.show(
-      id: notification.hashCode,
-      title: notification.title,
-      body: notification.body,
-      notificationDetails: details,
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      details,
       payload: _buildPayload(message),
     );
 
