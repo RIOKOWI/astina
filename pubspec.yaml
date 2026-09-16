@@ -27,7 +27,7 @@ dependencies:
   path_provider: ^2.1.4
   logger: ^2.7.0
   lottie: ^3.1.0
-  flutter_local_notifications: ^20.1.0
+  flutter_local_notifications: ^18.0.0
   local_auth: ^2.3.0
 
 dev_dependencies:
@@ -37,6 +37,11 @@ dev_dependencies:
   mockito: ^5.4.6
   build_runner: ^2.4.15
   flutter_launcher_icons: ^0.14.4
+
+dependency_overrides:
+  # flutter_local_notifications 18.x uses Android SDK 33 APIs
+  # Override local_auth_android to a version that works on Android 13 (SDK 33)
+  local_auth_android: 1.0.41
 
 flutter:
   uses-material-design: true
