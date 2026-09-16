@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../sos/providers/sos_provider.dart';
 import '../../../sos/services/sos_audio_service.dart';
 import '../../data/models/menu_item_model.dart';
+import '../../data/models/activity_model.dart';
+import '../../providers/activity_provider.dart';
+import '../../data/models/dashboard_summary_model.dart';
+import '../../providers/dashboard_summary_provider.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -336,70 +340,297 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
-class _DashboardHome extends ConsumerWidget {
+class _DashboardHome extends ConsumerStatefulWidget {
   const _DashboardHome({required this.user, required this.role});
 
   final dynamic user;
   final UserRole role;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_DashboardHome> createState() => _DashboardHomeState();
+}
+
+class _DashboardHomeState extends ConsumerState<_DashboardHome> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(activitiesListProvider.notifier).load(status: 'published');
+      ref.read(dashboardSummaryProvider.notifier).load();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final actState = ref.watch(activitiesListProvider);
+    final summary = ref.watch(dashboardSummaryProvider);
+
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Selamat Datang,',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.dark.withValues(alpha: 0.58),
+      child: RefreshIndicator(
+        onRefresh: () async {
+          ref.read(activitiesListProvider.notifier).load(status: 'published');
+          await ref.read(dashboardSummaryProvider.notifier).refresh();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Selamat Datang,',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.dark.withValues(alpha: 0.58),
+                ),
               ),
-            ),
-            Text(
-              user?.resident?.fullName ?? 'Warga',
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
+              Text(
+                widget.user?.resident?.fullName ?? 'Warga',
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.dark,
+                ),
+              ),
+              if (widget.user?.roles.isNotEmpty == true) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: widget.user!.roles.map<Widget>((r) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        r.name,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              const SizedBox(height: 28),
+              _buildRoleSpecificSummary(widget.role, summary),
+              const SizedBox(height: 24),
+              _buildActivitiesSection(actState),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivitiesSection(ActivitiesListState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Aktivitas',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
                 color: AppColors.dark,
               ),
             ),
-            if (user?.roles.isNotEmpty == true) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: user!.roles.map<Widget>((r) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      r.name,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  );
-                }).toList(),
+            TextButton(
+              onPressed: () => context.push('/activities'),
+              child: const Text('Lihat semua'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (state.error != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Gagal memuat aktivitas',
+                    style: TextStyle(fontSize: 13, color: AppColors.error),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => ref
+                      .read(activitiesListProvider.notifier)
+                      .load(status: 'published'),
+                  child: const Text('Coba lagi'),
+                ),
+              ],
+            ),
+          )
+        else if (state.activities.isEmpty && !state.isLoading)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.dark.withValues(alpha: 0.05)),
+            ),
+            child: const Center(
+              child: Column(
+                children: [
+                  Icon(Icons.event_outlined, size: 36, color: AppColors.grey),
+                  SizedBox(height: 8),
+                  Text(
+                    'Belum ada aktivitas',
+                    style: TextStyle(fontSize: 14, color: AppColors.grey),
+                  ),
+                ],
               ),
-            ],
-            const SizedBox(height: 28),
-            _buildRoleSpecificSummary(role),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: state.activities.length > 5
+                ? 5
+                : state.activities.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              final a = state.activities[index];
+              return _buildActivityCard(a);
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildActivityCard(Activity activity) {
+    return GestureDetector(
+      onTap: () => context.push('/activities/${activity.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.dark.withValues(alpha: 0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.dark.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.campaign_outlined,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activity.title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.dark,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          if (activity.location != null) ...[
+                            Icon(
+                              Icons.location_on,
+                              size: 12,
+                              color: AppColors.dark.withValues(alpha: 0.45),
+                            ),
+                            const SizedBox(width: 2),
+                            Flexible(
+                              child: Text(
+                                activity.location!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.dark.withValues(alpha: 0.45),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                          if (activity.startAt != null) ...[
+                            if (activity.location != null)
+                              const SizedBox(width: 8),
+                            Icon(
+                              Icons.schedule,
+                              size: 12,
+                              color: AppColors.dark.withValues(alpha: 0.45),
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              _formatDate(activity.startAt!),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.dark.withValues(alpha: 0.45),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColors.dark.withValues(alpha: 0.30),
+                  size: 20,
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRoleSpecificSummary(UserRole role) {
+  String _formatDate(DateTime dt) {
+    return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  Widget _buildRoleSpecificSummary(UserRole role, DashboardSummary summary) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -421,33 +652,70 @@ class _DashboardHome extends ConsumerWidget {
           childAspectRatio: 1.4,
           children: _summaryItems(
             role,
+            summary,
           ).map((e) => _buildSummaryCard(e.$1, e.$2, e.$3)).toList(),
         ),
       ],
     );
   }
 
-  List<(IconData, String, String)> _summaryItems(UserRole role) {
+  List<(IconData, String, String)> _summaryItems(
+    UserRole role,
+    DashboardSummary summary,
+  ) {
     switch (role) {
       case UserRole.rt:
         return [
-          (Icons.mail_outlined, 'Surat Pending', '0'),
-          (Icons.report_outlined, 'Pengaduan', '0'),
-          (Icons.warning_amber_outlined, 'SOS Aktif', '0'),
-          (Icons.campaign_outlined, 'Aktivitas', '0'),
+          (
+            Icons.mail_outlined,
+            'Surat Pending',
+            '${summary.letterPendingCount}',
+          ),
+          (
+            Icons.report_outlined,
+            'Pengaduan',
+            '${summary.complaintPendingCount}',
+          ),
+          (
+            Icons.warning_amber_outlined,
+            'SOS Aktif',
+            '${summary.sosActiveCount}',
+          ),
+          (Icons.campaign_outlined, 'Aktivitas', '${summary.activityCount}'),
         ];
       case UserRole.bendahara:
         return [
-          (Icons.payments_outlined, 'Pembayaran Pending', '0'),
-          (Icons.account_balance_wallet_outlined, 'Saldo Kas', 'Rp 0'),
+          (
+            Icons.payments_outlined,
+            'Pembayaran Pending',
+            '${summary.paymentPendingCount}',
+          ),
+          (
+            Icons.account_balance_wallet_outlined,
+            'Saldo Kas',
+            'Rp ${_formatRupiah(summary.cashBalance)}',
+          ),
         ];
       case UserRole.warga:
       case UserRole.unknown:
         return [
-          (Icons.campaign_outlined, 'Aktivitas RT', '0'),
-          (Icons.account_balance_wallet_outlined, 'Tagihan Saya', 'Rp 0'),
+          (Icons.campaign_outlined, 'Aktivitas RT', '${summary.activityCount}'),
+          (
+            Icons.account_balance_wallet_outlined,
+            'Tagihan Saya',
+            'Rp ${_formatRupiah(summary.myDueBillAmount)}',
+          ),
         ];
     }
+  }
+
+  String _formatRupiah(int amount) {
+    if (amount >= 1000000) {
+      return '${(amount / 1000000).toStringAsFixed(1)}jt';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(0)}rb';
+    }
+    return '$amount';
   }
 
   Widget _buildSummaryCard(IconData icon, String label, String value) {
