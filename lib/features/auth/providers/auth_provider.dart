@@ -23,12 +23,22 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> _init() async {
     if (kDebugMode) developer.log('Auth: initializing...', name: 'Auth');
+
+    final token = await _storage.getToken();
+    if (token == null) {
+      _updateState(const Unauthenticated());
+      return;
+    }
+
+    // Check if biometric is required before resolving auth
+    final biometricEnabled = await _storage.isBiometricEnabled();
+    if (biometricEnabled) {
+      // Stay in AuthLoading — splash page will trigger verifyBiometric()
+      return;
+    }
+
+    // No biometric required — proceed with normal auth
     try {
-      final token = await _storage.getToken();
-      if (token == null) {
-        _updateState(const Unauthenticated());
-        return;
-      }
       final user = await _ds.getMe();
       await _storage.saveUser(user.toJsonString());
       _updateState(Authenticated(user));
@@ -71,6 +81,23 @@ class AuthNotifier extends Notifier<AuthState> {
     if (kDebugMode) developer.log('Auth: login success', name: 'Auth');
   }
 
+  /// Completes auth after biometric verification. Called from SplashPage.
+  Future<void> verifyBiometric() async {
+    if (kDebugMode) developer.log('Auth: biometric verified, completing init', name: 'Auth');
+    try {
+      final user = await _ds.getMe();
+      await _storage.saveUser(user.toJsonString());
+      _updateState(Authenticated(user));
+      registerFcmToken();
+    } catch (e, st) {
+      if (kDebugMode) {
+        developer.log('Auth: biometric verify failed: $e', name: 'Auth', error: e, stackTrace: st);
+      }
+      await _storage.clearAll();
+      _updateState(const Unauthenticated());
+    }
+  }
+
   Future<void> logout() async {
     if (kDebugMode) developer.log('Auth: logout started', name: 'Auth');
     try {
@@ -89,6 +116,13 @@ class AuthNotifier extends Notifier<AuthState> {
     await _storage.clearAll();
     _updateState(const Unauthenticated());
     if (kDebugMode) developer.log('Auth: logged out', name: 'Auth');
+  }
+
+  /// Clears auth state locally without API call — used when biometric is cancelled/failed.
+  Future<void> clearLocalAuth() async {
+    resetFcmTokenCache();
+    await _storage.clearAll();
+    _updateState(const Unauthenticated());
   }
 
   Future<void> refreshUser() async {
