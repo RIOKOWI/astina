@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/router_refresh_notifier.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/auth/presentation/pages/change_password_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
@@ -81,11 +82,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/splash',
       name: 'splash',
-      builder: (context, state) => const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
+      builder: (context, state) => const SplashPage(),
     ),
     GoRoute(
       path: '/login',
