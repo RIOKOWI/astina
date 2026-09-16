@@ -144,7 +144,6 @@ class AppDrawer extends ConsumerWidget {
         return MenuConfig.warga;
     }
   }
-
 }
 
 class _DrawerItem extends StatelessWidget {
