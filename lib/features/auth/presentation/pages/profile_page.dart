@@ -15,6 +15,34 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
+  bool _biometricAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final biometric = ref.read(biometricServiceProvider);
+    final canAuth = await biometric.canCheckBiometrics();
+    if (mounted) setState(() => _biometricAvailable = canAuth);
+  }
+
+  Future<void> _toggleBiometric(bool enable) async {
+    final biometric = ref.read(biometricServiceProvider);
+    final storage = ref.read(secureStorageProvider);
+    if (enable) {
+      final verified = await biometric.authenticate(
+        reason: 'Verifikasi untuk mengaktifkan fingerprint',
+      );
+      if (verified) await storage.setBiometricEnabled(true);
+    } else {
+      await storage.setBiometricEnabled(false);
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -39,6 +67,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 // Profile card
                 _buildProfileCard(user),
                 const SizedBox(height: 20),
+                // Biometric toggle
+                if (_biometricAvailable) ...[
+                  _buildBiometricTile(),
+                  const SizedBox(height: 12),
+                ],
                 // Action buttons
                 _buildActionTile(
                   icon: Icons.person_outline,
@@ -257,6 +290,79 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBiometricTile() {
+    final storage = ref.read(secureStorageProvider);
+    return FutureBuilder<bool>(
+      future: storage.isBiometricEnabled(),
+      builder: (context, snapshot) {
+        final enabled = snapshot.data ?? false;
+        return GestureDetector(
+          onTap: () => _toggleBiometric(!enabled),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.dark.withValues(alpha: 0.05)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.dark.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.fingerprint,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Login Fingerprint',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.dark,
+                        ),
+                      ),
+                      Text(
+                        enabled ? 'Aktif' : 'Nonaktif',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.dark.withValues(alpha: 0.50),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: enabled,
+                  onChanged: _toggleBiometric,
+                  activeTrackColor: AppColors.primary,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
