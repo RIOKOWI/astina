@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
 import '../../../../core/injection/dependency_injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
@@ -31,15 +30,16 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   Future<void> _triggerBiometric() async {
     final biometric = ref.read(biometricServiceProvider);
     try {
+      if (!await biometric.canCheckBiometrics()) return;
+      if (!await biometric.isDeviceSupported()) return;
       final success = await biometric.authenticate(
         reason: 'Verifikasi sidik jari untuk masuk aplikasi',
       );
       if (success && mounted) {
         await ref.read(authProvider.notifier).verifyBiometric();
       }
-      // If cancelled/failed: stays on splash, user can retry
     } catch (e) {
-      // Error — stays on splash, user can retry
+      // Biometric unavailable/error — skip silently, user can login via password
     }
   }
 
