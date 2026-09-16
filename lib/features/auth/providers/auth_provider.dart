@@ -57,8 +57,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Exposed as protected for test subclassing. Use [_updateState] in production.
   @visibleForTesting
-  void updateAuthState(UserModel? user) =>
-      _updateState(user != null ? Authenticated(user) : const Unauthenticated());
+  void updateAuthState(UserModel? user) => _updateState(
+    user != null ? Authenticated(user) : const Unauthenticated(),
+  );
 
   Future<void> login({required String phone, required String password}) async {
     if (kDebugMode) developer.log('Auth: login started', name: 'Auth');
@@ -84,6 +85,7 @@ class AuthNotifier extends Notifier<AuthState> {
         );
       }
     }
+    resetFcmTokenCache();
     await _storage.clearAll();
     _updateState(const Unauthenticated());
     if (kDebugMode) developer.log('Auth: logged out', name: 'Auth');
