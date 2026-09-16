@@ -10,6 +10,7 @@ class SecureStorageService {
 
   static const _tokenKey = 'auth_token';
   static const _userKey = 'cached_user';
+  static const _biometricEnabledKey = 'biometric_enabled';
 
   Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
@@ -49,5 +50,14 @@ class SecureStorageService {
 
   Future<void> delete(String key) async {
     await _storage.delete(key: key);
+  }
+
+  Future<void> setBiometricEnabled(bool value) async {
+    await _storage.write(key: _biometricEnabledKey, value: value.toString());
+  }
+
+  Future<bool> isBiometricEnabled() async {
+    final v = await _storage.read(key: _biometricEnabledKey);
+    return v == 'true';
   }
 }
