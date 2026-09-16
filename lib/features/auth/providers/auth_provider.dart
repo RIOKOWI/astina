@@ -83,7 +83,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Completes auth after biometric verification. Called from SplashPage.
   Future<void> verifyBiometric() async {
-    if (kDebugMode) developer.log('Auth: biometric verified, completing init', name: 'Auth');
+    if (kDebugMode)
+      developer.log('Auth: biometric verified, completing init', name: 'Auth');
     try {
       final user = await _ds.getMe();
       await _storage.saveUser(user.toJsonString());
@@ -91,7 +92,12 @@ class AuthNotifier extends Notifier<AuthState> {
       registerFcmToken();
     } catch (e, st) {
       if (kDebugMode) {
-        developer.log('Auth: biometric verify failed: $e', name: 'Auth', error: e, stackTrace: st);
+        developer.log(
+          'Auth: biometric verify failed: $e',
+          name: 'Auth',
+          error: e,
+          stackTrace: st,
+        );
       }
       await _storage.clearAll();
       _updateState(const Unauthenticated());
