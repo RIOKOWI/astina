@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/fcm_service.dart';
+import 'features/auth/providers/auth_provider.dart';
 import 'features/fcm/fcm_provider.dart';
 import 'features/sos/services/sos_audio_service.dart';
 import 'features/sos/data/datasources/sos_remote_data_source.dart';
@@ -58,6 +59,9 @@ class _AstinaAppState extends ConsumerState<AstinaApp>
 
   @override
   Widget build(BuildContext context) {
+    // Force auth provider to initialize early so GoRouter redirect sees current state
+    ref.watch(authProvider);
+
     ref.listen(fcmMessageProvider, (prev, next) {
       next.whenData((message) {
         if (message != null) {
