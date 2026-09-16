@@ -45,8 +45,9 @@ class DueModel {
         return 'Triwulanan';
       case 'yearly':
         return 'Tahunan';
-      case 'one-time':
       case 'one_time':
+        return 'Sekali';
+      case 'one-time':
         return 'Sekali';
       default:
         return frequency ?? '-';

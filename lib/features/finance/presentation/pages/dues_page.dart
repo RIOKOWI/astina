@@ -500,9 +500,7 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
       _nameController.text = due.name;
       _amountController.text = due.amount.toString();
       _descriptionController.text = due.description ?? '';
-      _frequency = due.frequency == 'one_time'
-          ? 'one-time'
-          : due.frequency ?? 'monthly';
+      _frequency = due.frequency ?? 'monthly';
       _isActive = due.isActive;
       _startDate = DateTime.tryParse(due.startDate ?? '');
       _endDate = DateTime.tryParse(due.endDate ?? '');
@@ -585,7 +583,7 @@ class _DueFormSheetState extends ConsumerState<_DueFormSheet> {
                     child: Text('Triwulanan'),
                   ),
                   DropdownMenuItem(value: 'yearly', child: Text('Tahunan')),
-                  DropdownMenuItem(value: 'one-time', child: Text('Sekali')),
+                  DropdownMenuItem(value: 'one_time', child: Text('Sekali')),
                 ],
                 onChanged: (v) => setState(() => _frequency = v!),
               ),
