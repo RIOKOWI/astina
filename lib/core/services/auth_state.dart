@@ -4,6 +4,7 @@ sealed class AuthState {
   const AuthState();
   bool get isAuthenticated => this is Authenticated;
   bool get isLoading => this is AuthLoading;
+  bool get isBiometricRequired => false;
   UserModel? get user => switch (this) {
     Authenticated(:final user) => user,
     _ => null,
