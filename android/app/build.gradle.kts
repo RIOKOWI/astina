@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.astina"
-        minSdk = flutter.minSdkVersion
+        minSdk = flutter.minSdkVersion  // biometric requires API 23+
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
