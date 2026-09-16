@@ -130,6 +130,12 @@ final unreadCountProvider = Provider<int>((ref) {
 // Device token management — call after login, before logout
 String? _currentFcmToken;
 
+/// Clears the cached FCM token so the next `registerFcmToken()` call
+/// always hits the API (required when switching user accounts on the same device).
+void resetFcmTokenCache() {
+  _currentFcmToken = null;
+}
+
 Future<void> registerFcmToken() async {
   try {
     final token = await FirebaseMessaging.instance.getToken();
