@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+import '../../../../core/injection/dependency_injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../providers/auth_provider.dart';
@@ -18,7 +19,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final biometric = ref.read(biometricServiceProvider);
+    final storage = ref.read(secureStorageProvider);
+    final canAuth = await biometric.canCheckBiometrics();
+    final enabled = await storage.isBiometricEnabled();
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = canAuth;
+        _biometricEnabled = enabled;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -42,6 +64,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             phone: _phoneController.text.trim(),
             password: _passwordController.text,
           );
+      // After successful login, prompt enable biometric
+      if (_biometricAvailable && !_biometricEnabled) {
+        _showBiometricPrompt();
+      }
     } on ApiException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
@@ -51,6 +77,51 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _onBiometricLogin() async {
+    final biometric = ref.read(biometricServiceProvider);
+    final success = await biometric.authenticate(
+      reason: 'Verifikasi sidik jari untuk masuk',
+    );
+    if (success && mounted) {
+      // Token already stored — just trigger auth state refresh
+      ref.invalidate(authProvider);
+    }
+  }
+
+  void _showBiometricPrompt() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Aktifkan Fingerprint'),
+        content: const Text(
+          'Gunakan sidik jari untuk login lebih cepat di kesempatan berikutnya?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Nanti'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final biometric = ref.read(biometricServiceProvider);
+              final storage = ref.read(secureStorageProvider);
+              final verified = await biometric.authenticate(
+                reason: 'Verifikasi untuk mengaktifkan fingerprint',
+              );
+              if (verified) {
+                await storage.setBiometricEnabled(true);
+                if (mounted) setState(() => _biometricEnabled = true);
+              }
+            },
+            child: const Text('Aktifkan'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -225,6 +296,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ],
             const SizedBox(height: 24),
             _buildLoginButton(),
+            if (_biometricAvailable && _biometricEnabled) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton.icon(
+                  onPressed: _onBiometricLogin,
+                  icon: const Icon(Icons.fingerprint, size: 28),
+                  label: const Text('Masuk dengan Fingerprint'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
