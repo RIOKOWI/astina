@@ -13,8 +13,9 @@ import '../data/models/user_model.dart';
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
+    _updateState(const AuthLoading());
     _init();
-    return const Unauthenticated();
+    return const AuthLoading();
   }
 
   SecureStorageService get _storage => ref.read(secureStorageProvider);
@@ -25,12 +26,12 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final token = await _storage.getToken();
       if (token == null) {
-        _updateState(null);
+        _updateState(const Unauthenticated());
         return;
       }
       final user = await _ds.getMe();
       await _storage.saveUser(user.toJsonString());
-      _updateState(user);
+      _updateState(Authenticated(user));
       registerFcmToken();
     } catch (e, st) {
       final isUnauthorized = e is DioException && e.response?.statusCode == 401;
@@ -45,25 +46,26 @@ class AuthNotifier extends Notifier<AuthState> {
       if (isUnauthorized) {
         await _storage.clearAll();
       }
-      _updateState(null);
+      _updateState(const Unauthenticated());
     }
   }
 
-  void _updateState(UserModel? user) {
-    state = user != null ? Authenticated(user) : const Unauthenticated();
+  void _updateState(AuthState authState) {
+    state = authState;
     routerRefreshNotifier.update(state);
   }
 
   /// Exposed as protected for test subclassing. Use [_updateState] in production.
   @visibleForTesting
-  void updateAuthState(UserModel? user) => _updateState(user);
+  void updateAuthState(UserModel? user) =>
+      _updateState(user != null ? Authenticated(user) : const Unauthenticated());
 
   Future<void> login({required String phone, required String password}) async {
     if (kDebugMode) developer.log('Auth: login started', name: 'Auth');
     final (token, user) = await _ds.login(phone: phone, password: password);
     await _storage.saveToken(token);
     await _storage.saveUser(user.toJsonString());
-    _updateState(user);
+    _updateState(Authenticated(user));
     registerFcmToken();
     if (kDebugMode) developer.log('Auth: login success', name: 'Auth');
   }
@@ -83,7 +85,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
     }
     await _storage.clearAll();
-    _updateState(null);
+    _updateState(const Unauthenticated());
     if (kDebugMode) developer.log('Auth: logged out', name: 'Auth');
   }
 
@@ -92,7 +94,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final user = await _ds.getMe();
       await _storage.saveUser(user.toJsonString());
-      _updateState(user);
+      _updateState(Authenticated(user));
     } catch (e, st) {
       if (kDebugMode) {
         developer.log(
