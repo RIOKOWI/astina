@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "397236701275",
+    "project_id": "astina-62962",
+    "storage_bucket": "astina-62962.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:397236701275:android:f886c0089e60465ee8977e",
+        "android_client_info": {
+          "package_name": "com.example.astina"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3HDJffRyTFWjZD5qRVFpOC9BTxwOT-3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
